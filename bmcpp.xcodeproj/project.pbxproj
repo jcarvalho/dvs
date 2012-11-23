@@ -8,7 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		E03123E9165FD1360090D66A /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E03123E8165FD1360090D66A /* main.cpp */; };
-		E03123EB165FD1360090D66A /* bmcpp.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = E03123EA165FD1360090D66A /* bmcpp.1 */; };
+		E03123F3165FD5110090D66A /* Clause.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E03123F1165FD5110090D66A /* Clause.cpp */; };
+		E03123F6165FD5390090D66A /* Head.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E03123F4165FD5390090D66A /* Head.cpp */; };
+		E03123FD165FDAD70090D66A /* split.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E03123FB165FDAD70090D66A /* split.cpp */; };
+		E0312401165FDCAB0090D66A /* BoolExpression.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E03123FF165FDCAB0090D66A /* BoolExpression.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -18,7 +21,6 @@
 			dstPath = /usr/share/man/man1/;
 			dstSubfolderSpec = 0;
 			files = (
-				E03123EB165FD1360090D66A /* bmcpp.1 in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
@@ -27,7 +29,14 @@
 /* Begin PBXFileReference section */
 		E03123E4165FD1360090D66A /* bmcpp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = bmcpp; sourceTree = BUILT_PRODUCTS_DIR; };
 		E03123E8165FD1360090D66A /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		E03123EA165FD1360090D66A /* bmcpp.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = bmcpp.1; sourceTree = "<group>"; };
+		E03123F1165FD5110090D66A /* Clause.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Clause.cpp; sourceTree = "<group>"; };
+		E03123F2165FD5110090D66A /* Clause.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Clause.h; sourceTree = "<group>"; };
+		E03123F4165FD5390090D66A /* Head.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Head.cpp; sourceTree = "<group>"; };
+		E03123F5165FD5390090D66A /* Head.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Head.h; sourceTree = "<group>"; };
+		E03123FB165FDAD70090D66A /* split.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = split.cpp; sourceTree = "<group>"; };
+		E03123FC165FDAD70090D66A /* split.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = split.h; sourceTree = "<group>"; };
+		E03123FF165FDCAB0090D66A /* BoolExpression.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BoolExpression.cpp; sourceTree = "<group>"; };
+		E0312400165FDCAB0090D66A /* BoolExpression.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BoolExpression.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,7 +70,14 @@
 			isa = PBXGroup;
 			children = (
 				E03123E8165FD1360090D66A /* main.cpp */,
-				E03123EA165FD1360090D66A /* bmcpp.1 */,
+				E03123F1165FD5110090D66A /* Clause.cpp */,
+				E03123F2165FD5110090D66A /* Clause.h */,
+				E03123F4165FD5390090D66A /* Head.cpp */,
+				E03123F5165FD5390090D66A /* Head.h */,
+				E03123FB165FDAD70090D66A /* split.cpp */,
+				E03123FC165FDAD70090D66A /* split.h */,
+				E03123FF165FDCAB0090D66A /* BoolExpression.cpp */,
+				E0312400165FDCAB0090D66A /* BoolExpression.h */,
 			);
 			path = bmcpp;
 			sourceTree = "<group>";
@@ -118,6 +134,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				E03123E9165FD1360090D66A /* main.cpp in Sources */,
+				E03123F3165FD5110090D66A /* Clause.cpp in Sources */,
+				E03123F6165FD5390090D66A /* Head.cpp in Sources */,
+				E03123FD165FDAD70090D66A /* split.cpp in Sources */,
+				E0312401165FDCAB0090D66A /* BoolExpression.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -178,14 +198,28 @@
 		E03123EF165FD1360090D66A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				OTHER_LDFLAGS = (
+					"-L/usr/local/lib",
+					"-lz3",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				RUN_CLANG_STATIC_ANALYZER = YES;
+				USER_HEADER_SEARCH_PATHS = /usr/include;
 			};
 			name = Debug;
 		};
 		E03123F0165FD1360090D66A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				OTHER_LDFLAGS = (
+					"-L/usr/local/lib",
+					"-lz3",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				RUN_CLANG_STATIC_ANALYZER = YES;
+				USER_HEADER_SEARCH_PATHS = /usr/include;
 			};
 			name = Release;
 		};
@@ -208,6 +242,7 @@
 				E03123F0165FD1360090D66A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

@@ -11,6 +11,11 @@
 
 #include <iostream>
 #include <vector>
+#include <z3.h>
+
+Z3_ast mk_int(Z3_context ctx, int v);
+
+Z3_ast mk_str_var(Z3_context ctx, const char *name);
 
 std::vector<std::string> split(const std::string &s, char delim);
 

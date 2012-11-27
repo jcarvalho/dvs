@@ -10,7 +10,7 @@
 
 #include <cstdlib>
 
-static const string operators[] = { "=", "<=", ">=", "<", ">"};
+static const string operators[] = { "=<", ">=", "<", ">", "="};
 
 BoolExpression::BoolExpression(string expr) {
     size_t opIdx = string::npos;
@@ -32,6 +32,32 @@ BoolExpression::BoolExpression(string expr) {
     this->rightOperand = new SubExpression(rightExpr);
 }
 
-Z3_ast BoolExpression::getAst() {
-    return NULL;
+Z3_ast BoolExpression::getAst(Z3_context context) {
+    
+    Z3_ast left = this->leftOperand->getAst(context);
+    Z3_ast right = this->rightOperand->getAst(context);
+    
+    if(this->operatorCode == "=") {
+        return Z3_mk_eq(context, left, right);
+    }
+    
+    if(this->operatorCode == "<") {
+        return Z3_mk_lt(context, left, right);
+    }
+    
+    if(this->operatorCode == "=<") {
+        return Z3_mk_le(context, left, right);
+    }
+    
+    if(this->operatorCode == ">") {
+        return Z3_mk_gt(context, left, right);
+    }
+    
+    if(this->operatorCode == ">=") {
+        return Z3_mk_ge(context, left, right);
+    }
+    
+    std::cerr << "Error, cannot generate AST for expression! Unknown Operator: " << this->operatorCode << std::endl;
+    exit(-1);
+    
 }

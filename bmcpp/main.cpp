@@ -9,7 +9,7 @@
 #include <iostream>
 #include <z3.h>
 #include <fstream>
-#include "split.h"
+#include "helper.h"
 #include "Head.h"
 #include "Clause.h"
 #include "BoolExpression.h"
@@ -36,6 +36,9 @@ int main(int argc, const char * argv[])
     
     int i = 0;
     
+    Z3_config config = Z3_mk_config();
+    Z3_context context = Z3_mk_context(config);
+    
     std::regex regex(" -");
     
     while (getline(infile, line))
@@ -59,7 +62,9 @@ int main(int argc, const char * argv[])
             if(item.c_str()[0] == 'h') {
                 clause->formulas->push_back(new Head(tokens[i]));
             } else {
-                clause->expressions->push_back(new BoolExpression(tokens[i]));
+                BoolExpression *expression = new BoolExpression(tokens[i]);
+                clause->expressions->push_back(expression);
+                std::cout << "AST: " << Z3_ast_to_string(context, expression->getAst(context)) << std::endl;
             }
         }
         

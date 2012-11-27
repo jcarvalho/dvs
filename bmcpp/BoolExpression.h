@@ -26,7 +26,7 @@ public:
     
     BoolExpression(string expr);
     
-    Z3_ast getAst();
+    Z3_ast getAst(Z3_context context);
     
 };
 

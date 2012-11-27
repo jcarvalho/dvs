@@ -9,6 +9,10 @@
 #include "SubExpression.h"
 
 #include <algorithm>
+#include <map>
+#include "helper.h"
+
+static map<int, Z3_ast> intMap;
 
 size_t getLastOp(size_t op1, size_t op2) {
     if (op1 == string::npos) {
@@ -30,8 +34,7 @@ SubExpression::SubExpression(string expr) {
     }
     if (lastOp == string::npos) {
         // we reached a basic value --- this expr has no operators
-        // if expr is an empty space, it means zero
-        this->value = (expr == " " ? "0" : expr);
+        this->value = expr;
     } else {
         // there is at least one operator to process
         this->operatorCode = expr.at(lastOp);
@@ -42,7 +45,38 @@ SubExpression::SubExpression(string expr) {
     }
 }
 
-Z3_ast SubExpression::getAst() {
-    return NULL;
+Z3_ast SubExpression::getAst(Z3_context context) {
+    
+    if(this->value != "") {
+        
+        char firstChar = this->value.at(0);
+        
+        if(firstChar >= '0' && firstChar <= '9') {
+            int value = atoi(this->value.c_str());
+            // Remember to check the map!
+            return mk_int(context, value);
+        } else {
+            return mk_str_var(context, this->value.c_str());
+        }
+        
+    }
+    
+    Z3_ast operatorArgs[2];
+    operatorArgs[0] = this->leftExpr->getAst(context);
+    operatorArgs[1] = this->rightExpr->getAst(context);
+    
+    switch(this->operatorCode) {
+        case '+':
+            return Z3_mk_add(context, 2, operatorArgs);
+        case '-':
+            return Z3_mk_sub(context, 2, operatorArgs);
+        case '*':
+            return Z3_mk_mul(context, 2, operatorArgs);
+        case '/':
+            return Z3_mk_div(context, operatorArgs[0], operatorArgs[1]);
+        default:
+            std::cerr << "Error, cannot generate AST for expression! Unknown Operator: " << this->operatorCode << std::endl;
+            exit(-1);
+    }
 }
 

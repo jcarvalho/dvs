@@ -7,7 +7,7 @@
 //
 
 #include "Head.h"
-#include "split.h"
+#include "helper.h"
 #include <sstream>
 
 Head::Head(string headStr) {

@@ -74,7 +74,7 @@ int main(int argc, const char * argv[])
         
         if(iterator == clauses.end()) {
             clauseList = new list<Clause*>();
-            clauses.emplace(head->identifier, clauseList);
+            clauses.insert(pair<int, list<Clause*>*>(head->identifier, clauseList));
         } else {
             clauseList = iterator->second;
         }

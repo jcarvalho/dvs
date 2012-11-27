@@ -11,13 +11,20 @@
 
 #include <iostream>
 #include <z3.h>
+#include "SubExpression.h"
 
 using namespace std;
 
 class BoolExpression {
     
 public:
-    BoolExpression(string magic);
+    string operator;
+
+    SubExpression* leftOperand;
+
+    SubExpression* rightOperand;
+
+    BoolExpression(string expr);
     
     Z3_ast getAst();
     

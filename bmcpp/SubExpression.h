@@ -1,0 +1,35 @@
+//
+//  SubExpression.h
+//  bmcpp
+//
+//  Created by Joao Carvalho on 11/23/12.
+//  Copyright (c) 2012 IST. All rights reserved.
+//
+
+#ifndef __bmcpp__SubExpression__
+#define __bmcpp__SubExpression__
+
+#include <iostream>
+#include <z3.h>
+
+using namespace std;
+
+class SubExpression {
+    
+public:
+  char operator;
+
+  SubExpression* leftExpr;
+  SubExpression* rightExpr;
+
+  // either the above are null or this value is null
+  // inheritance would fit nicely here
+  string value;
+
+    SubExpression(string expr);
+    
+    Z3_ast getAst();
+    
+};
+
+#endif /* defined(__bmcpp__SubExpression__) */

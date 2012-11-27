@@ -36,7 +36,7 @@ int main(int argc, const char * argv[])
     
     int i = 0;
     
-    std::regex regex("\ -");
+    std::regex regex(" -");
     
     while (getline(infile, line))
     {

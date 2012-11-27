@@ -8,6 +8,8 @@
 
 #include "BoolExpression.h"
 
+#include <cstdlib>
+
 static const string operators[] = { "=", "<=", ">=", "<", ">"};
 
 BoolExpression::BoolExpression(string expr) {

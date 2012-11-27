@@ -21,6 +21,8 @@ using namespace std;
 
 class Head {
  
+    void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Clause*>*> &clauses, map<string, string> mapping);
+    
 public:
     int identifier;
     

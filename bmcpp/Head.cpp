@@ -54,20 +54,7 @@ void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &cl
     return expandHead(context, clauses, mapping);
 }
 
-void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &clauses, map<string, string> mapping) {
-    
-    std::cout << "Expanding h" << this->identifier << std::endl;
-    
-    debugMapping(mapping);
-    
-    list<Clause*>* clauseList = clauses.find(this->identifier)->second;
-    
-    if(clauseList->size() != 1) {
-        std::cerr << "Branch, we'll handle it later!" << std::endl;
-        // exit(-1);
-    }
-    
-    Clause *clause = clauseList->front();
+void Head::expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Clause*>*> &clauses, map<string, string> mapping) {
     
     for(int i = 0; i < this->vars.size(); i++) {
         mapping.insert(pair<string, string>(clause->head->vars[i], this->vars[i]));
@@ -82,5 +69,30 @@ void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &cl
     for(Head* head : *(clause->formulas)) {
         head->expandHead(context, clauses, mapping);
     }
+}
+
+void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &clauses, map<string, string> mapping) {
+    
+    std::cout << "Expanding h" << this->identifier << std::endl;
+    
+    debugMapping(mapping);
+    
+    list<Clause*>* clauseList = clauses.find(this->identifier)->second;
+    
+    if(clauseList->size() != 1) {        
+        for(Clause *clause : *clauseList) {
+            Z3_push(context);
+            
+            std::cout << "Exploring branch of clause " << clause->head->identifier << std::endl;
+            
+            expandClause(clause, context, clauses, mapping);
+            
+            Z3_pop(context, 1);
+        }
+    }
+    
+    Clause *clause = clauseList->front();
+    
+    expandClause(clause, context, clauses, mapping);
     
 }

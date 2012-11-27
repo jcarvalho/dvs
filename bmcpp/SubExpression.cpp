@@ -34,6 +34,11 @@ SubExpression::SubExpression(string expr) {
     }
     if (lastOp == string::npos) {
         // we reached a basic value --- this expr has no operators
+        
+        // HACK! THE GRAMMAR MUST BE PROPERLY DEFINED!
+        
+        expr.erase (remove(expr.begin(), expr.end(), '('), expr.end());
+        expr.erase (remove(expr.begin(), expr.end(), ')'), expr.end());
         this->value = expr;
     } else {
         // there is at least one operator to process

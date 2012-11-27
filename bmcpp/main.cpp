@@ -14,6 +14,7 @@
 #include "Clause.h"
 #include "BoolExpression.h"
 #include <unordered_map>
+#include <regex>
 
 using namespace std;
 
@@ -35,9 +36,14 @@ int main(int argc, const char * argv[])
     
     int i = 0;
     
+    std::regex regex("\ -");
+    
     while (getline(infile, line))
     {
         i++;
+        
+        line = std::regex_replace(line, regex, "0-");
+        
         vector<string> tokens = split(line, ' ');
         
         std::cout << line << std::endl;

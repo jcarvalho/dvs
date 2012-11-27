@@ -17,15 +17,15 @@ using namespace std;
 class SubExpression {
     
 public:
-  char operator;
-
-  SubExpression* leftExpr;
-  SubExpression* rightExpr;
-
-  // either the above are null or this value is null
-  // inheritance would fit nicely here
-  string value;
-
+    char operatorCode;
+    
+    SubExpression* leftExpr;
+    SubExpression* rightExpr;
+    
+    // either the above are null or this value is null
+    // inheritance would fit nicely here
+    string value;
+    
     SubExpression(string expr);
     
     Z3_ast getAst();

@@ -8,25 +8,26 @@
 
 #include "BoolExpression.h"
 
-const string BoolExpression::operators[] = { "=", "<=", ">=", "<", ">"};
+static const string operators[] = { "=", "<=", ">=", "<", ">"};
 
 BoolExpression::BoolExpression(string expr) {
-  size_t opIdx = string::npos;
-  for (int i = 0; i < 5; i++) {
-    opIdx = expr.find(operators[i]);
-    if (opIdx != string::npos) {
-      this->operator = operators[i];
-      break;
+    size_t opIdx = string::npos;
+    for (int i = 0; i < 5; i++) {
+        opIdx = expr.find(operators[i]);
+        if (opIdx != string::npos) {
+            this->operatorCode = operators[i];
+            break;
+        }
     }
-  }
-  if (opIdx == string::npos) {
-    std::cout << "Incorrect expr operator: " << expr << std::endl;
-  }
-  
-  string leftExpr = expr.substr(0, opIdx - 1);
-  string rightExpr = expr.substr(opIdx + this->operator.length(), expr.length());
-  this->leftOperand = new SubExpression(leftExpr);
-  this->rightOperand = new SubExpression(rightExpr);
+    if (opIdx == string::npos) {
+        std::cout << "Incorrect expr operator: " << expr << std::endl;
+        exit(-1);
+    }
+    
+    string leftExpr = expr.substr(0, opIdx);
+    string rightExpr = expr.substr(opIdx + this->operatorCode.length(), expr.length());
+    this->leftOperand = new SubExpression(leftExpr);
+    this->rightOperand = new SubExpression(rightExpr);
 }
 
 Z3_ast BoolExpression::getAst() {

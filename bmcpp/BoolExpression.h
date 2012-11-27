@@ -18,12 +18,12 @@ using namespace std;
 class BoolExpression {
     
 public:
-    string operator;
-
+    string operatorCode;
+    
     SubExpression* leftOperand;
-
+    
     SubExpression* rightOperand;
-
+    
     BoolExpression(string expr);
     
     Z3_ast getAst();

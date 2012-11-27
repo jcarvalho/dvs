@@ -12,6 +12,7 @@
 		E03123F6165FD5390090D66A /* Head.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E03123F4165FD5390090D66A /* Head.cpp */; };
 		E03123FD165FDAD70090D66A /* split.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E03123FB165FDAD70090D66A /* split.cpp */; };
 		E0312401165FDCAB0090D66A /* BoolExpression.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E03123FF165FDCAB0090D66A /* BoolExpression.cpp */; };
+		E066DF2F1665088C00BCE7DE /* SubExpression.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E066DF2D1665088C00BCE7DE /* SubExpression.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -37,6 +38,8 @@
 		E03123FC165FDAD70090D66A /* split.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = split.h; sourceTree = "<group>"; };
 		E03123FF165FDCAB0090D66A /* BoolExpression.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BoolExpression.cpp; sourceTree = "<group>"; };
 		E0312400165FDCAB0090D66A /* BoolExpression.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BoolExpression.h; sourceTree = "<group>"; };
+		E066DF2D1665088C00BCE7DE /* SubExpression.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SubExpression.cpp; sourceTree = "<group>"; };
+		E066DF2E1665088C00BCE7DE /* SubExpression.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SubExpression.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -69,6 +72,8 @@
 		E03123E7165FD1360090D66A /* bmcpp */ = {
 			isa = PBXGroup;
 			children = (
+				E066DF2D1665088C00BCE7DE /* SubExpression.cpp */,
+				E066DF2E1665088C00BCE7DE /* SubExpression.h */,
 				E03123E8165FD1360090D66A /* main.cpp */,
 				E03123F1165FD5110090D66A /* Clause.cpp */,
 				E03123F2165FD5110090D66A /* Clause.h */,
@@ -138,6 +143,7 @@
 				E03123F6165FD5390090D66A /* Head.cpp in Sources */,
 				E03123FD165FDAD70090D66A /* split.cpp in Sources */,
 				E0312401165FDCAB0090D66A /* BoolExpression.cpp in Sources */,
+				E066DF2F1665088C00BCE7DE /* SubExpression.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

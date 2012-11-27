@@ -32,10 +32,10 @@ BoolExpression::BoolExpression(string expr) {
     this->rightOperand = new SubExpression(rightExpr);
 }
 
-Z3_ast BoolExpression::getAst(Z3_context context) {
+Z3_ast BoolExpression::getAst(Z3_context context, map<string, string> mapping) {
     
-    Z3_ast left = this->leftOperand->getAst(context);
-    Z3_ast right = this->rightOperand->getAst(context);
+    Z3_ast left = this->leftOperand->getAst(context, mapping);
+    Z3_ast right = this->rightOperand->getAst(context, mapping);
     
     if(this->operatorCode == "=") {
         return Z3_mk_eq(context, left, right);

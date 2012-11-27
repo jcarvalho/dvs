@@ -49,7 +49,7 @@ int main(int argc, const char * argv[])
         
         vector<string> tokens = split(line, ' ');
         
-        std::cout << line << std::endl;
+        // std::cout << line << std::endl;
         
         Head *head = new Head(tokens[0]);
         
@@ -64,7 +64,7 @@ int main(int argc, const char * argv[])
             } else {
                 BoolExpression *expression = new BoolExpression(tokens[i]);
                 clause->expressions->push_back(expression);
-                std::cout << "AST: " << Z3_ast_to_string(context, expression->getAst(context)) << std::endl;
+                // std::cout << "AST: " << Z3_ast_to_string(context, expression->getAst(context)) << std::endl;
             }
         }
         
@@ -83,8 +83,31 @@ int main(int argc, const char * argv[])
         
     }
     
-    for ( auto local_it = clauses.begin(); local_it!= clauses.end(); ++local_it )
-        std::cout << " " << local_it->first << ":" << local_it->second;
+    std::cout << "Parsing done, now expanding..." << std::endl;
+    
+    std::list<Clause *> *falseClauses = clauses.find(0)->second;
+    
+    for ( auto local_it = falseClauses->begin(); local_it!= falseClauses->end(); ++local_it ) {
+        (*local_it)->formulas->front()->expandHead(context, clauses);
+    }
+
+    Z3_model model2;
+    
+    switch (Z3_check_and_get_model(context, &model2)) {
+        case Z3_L_FALSE:
+            printf("Z3_L_FALSE\n");
+            break;
+        case Z3_L_UNDEF:
+            printf("Z3_L_UNDEF\n");
+            break;
+        case Z3_L_TRUE:
+            printf("Z3_L_TRUE\n");
+            break;
+    }
+    
+    
+    printf("Model:\n%s", Z3_model_to_string(context, model2));
+    
     
     return 0;
 }

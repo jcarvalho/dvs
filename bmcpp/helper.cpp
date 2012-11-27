@@ -9,6 +9,8 @@
 #include "helper.h"
 #include <sstream>
 
+using namespace std;
+
 std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
     std::stringstream ss(s);
     std::string item;
@@ -34,4 +36,25 @@ Z3_ast mk_int(Z3_context ctx, int v)
 Z3_ast mk_str_var(Z3_context ctx, const char *name) {
     Z3_symbol symbol = Z3_mk_string_symbol(ctx, name);
     return Z3_mk_const(ctx, symbol, Z3_mk_int_sort(ctx));
+}
+
+void assertIt(Z3_context context, Z3_ast ast) {
+    std::cout << "Asserting " << Z3_ast_to_string(context, ast) << std::endl;
+    Z3_assert_cnstr(context, ast);
+}
+
+void debugMapping(std::map<string, string> mapping) {
+    
+    std::stringstream ss(stringstream::out);
+    
+    ss << "{";
+    
+    for(auto it = mapping.begin(); it != mapping.end(); it++) {
+        ss << " " << it->first << "=" << it->second;
+    }
+    
+    ss << "}";
+
+    std::cout << ss.str() << std::endl;
+    
 }

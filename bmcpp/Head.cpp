@@ -11,7 +11,6 @@
 #include <sstream>
 
 Head::Head(string headStr) {
-    vars = new list<string>();
     
     size_t paren = headStr.find("(");
     
@@ -30,17 +29,58 @@ Head::Head(string headStr) {
     vector<string> variables = split(varsStr, ',');
     
     for(string variable : variables) {
-        vars->push_back(variable);
+        vars.push_back(variable);
     }
     
 }
 
 Head::~Head() {
-    delete vars;
 }
 
 string Head::toString() {
     stringstream ss;
     ss << identifier;
     return ss.str();
+}
+
+void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &clauses) {
+    
+    map<string,string> mapping;
+    
+    for(string variable : this->vars) {
+        mapping.insert(pair<string, string>(variable, variable));
+    }
+    
+    return expandHead(context, clauses, mapping);
+}
+
+void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &clauses, map<string, string> mapping) {
+    
+    std::cout << "Expanding h" << this->identifier << std::endl;
+    
+    debugMapping(mapping);
+    
+    list<Clause*>* clauseList = clauses.find(this->identifier)->second;
+    
+    if(clauseList->size() != 1) {
+        std::cerr << "Branch, we'll handle it later!" << std::endl;
+        // exit(-1);
+    }
+    
+    Clause *clause = clauseList->front();
+    
+    for(int i = 0; i < this->vars.size(); i++) {
+        mapping.insert(pair<string, string>(clause->head->vars[i], this->vars[i]));
+    }
+    
+    debugMapping(mapping);
+    
+    for(BoolExpression* expression : *(clause->expressions)) {
+        assertIt(context, expression->getAst(context, mapping));
+    }
+    
+    for(Head* head : *(clause->formulas)) {
+        head->expandHead(context, clauses, mapping);
+    }
+    
 }

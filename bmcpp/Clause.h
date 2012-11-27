@@ -10,10 +10,14 @@
 #define __bmcpp__Clause__
 
 #include <iostream>
-#include "Head.h"
+#include <list>
 #include "BoolExpression.h"
 
 using namespace std;
+
+class Head;
+
+class BoolExpression;
 
 class Clause {
     

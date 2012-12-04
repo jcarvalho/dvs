@@ -9,6 +9,8 @@
 #ifndef __bmcpp__split__
 #define __bmcpp__split__
 
+#define K_MAX 5
+
 #include <iostream>
 #include <vector>
 #include <z3.h>

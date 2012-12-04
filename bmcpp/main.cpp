@@ -51,16 +51,16 @@ int main(int argc, const char * argv[])
         
         // std::cout << line << std::endl;
         
-        Head *head = new Head(tokens[0]);
-        
         Clause *clause = new Clause();
         
+        Head *head = new Head(tokens[0], clause);
+                
         clause->head = head;
         
         for(int i = 2; i < tokens.size(); i++) {
             string item = tokens[i];
             if(item.c_str()[0] == 'h') {
-                clause->formulas->push_back(new Head(tokens[i]));
+                clause->formulas->push_back(new Head(tokens[i], clause));
             } else {
                 BoolExpression *expression = new BoolExpression(tokens[i]);
                 clause->expressions->push_back(expression);
@@ -88,6 +88,11 @@ int main(int argc, const char * argv[])
     std::list<Clause *> *falseClauses = clauses.find(0)->second;
     
     for ( auto local_it = falseClauses->begin(); local_it!= falseClauses->end(); ++local_it ) {
+        
+        set<int> st;
+        
+        (*local_it)->head->fillRecursionState(clauses, st);
+        
         (*local_it)->formulas->front()->expandHead(context, clauses);
     }
 

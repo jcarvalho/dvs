@@ -13,6 +13,8 @@ Clause::Clause() {
     formulas = new list<Head*>();
     expressions = new list<BoolExpression*>();
     
+    recursionState = UNKNOWN;
+    
 }
 
 Clause::~Clause() {

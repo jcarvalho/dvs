@@ -56,9 +56,7 @@ int main(int argc, const char * argv[])
         Head *head = new Head(tokens[0], clause);
                 
         clause->head = head;
-        
-        std::cout << clause << " with ID: " << head->identifier << std::endl;
-        
+                
         for(int i = 2; i < tokens.size(); i++) {
             string item = tokens[i];
             if(item.c_str()[0] == 'h') {

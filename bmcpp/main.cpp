@@ -91,7 +91,7 @@ int main(int argc, const char * argv[])
         
         set<int> st;
         
-        (*local_it)->head->fillRecursionState(clauses, st);
+        (*local_it)->head->fillRecursionState(clauses, st, -1);
         
         (*local_it)->formulas->front()->expandHead(context, clauses);
     }

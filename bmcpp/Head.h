@@ -40,7 +40,7 @@ public:
     
     void expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &clauses, map<string, string> mapping, map<int, pair<Clause*, int>> *callStack);
   
-    void fillRecursionState(unordered_map<int, list<Clause*>*> &clauses, set<int>&);
+    void fillRecursionState(unordered_map<int, list<Clause*>*> &clauses, set<int>&, int);
     
 };
 

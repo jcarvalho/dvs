@@ -29,7 +29,7 @@ public:
     
     SubExpression(string expr);
     
-    Z3_ast getAst(Z3_context context, map<string, string> mapping);
+    Z3_ast getAst(Z3_context context, map<string, string> mapping, int k);
     
 };
 

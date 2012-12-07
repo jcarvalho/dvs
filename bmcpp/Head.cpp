@@ -55,11 +55,11 @@ void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &cl
         mapping.insert(pair<string, string>(variable, variable));
     }
     
-    return expandHead(context, clauses, mapping, &callStack);
+    return expandHead(context, clauses, mapping, &callStack, 0);
 }
 
 void Head::expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Clause*>*> &clauses, map<string, string> mapping,
-                        map<int, pair<Clause*, int>> *callStack) {
+                        map<int, pair<Clause*, int>> *callStack, int k) {
     
     for(int i = 0; i < this->vars.size(); i++) {
         if(clause->head->vars[i] == mapping[clause->head->vars[i]])
@@ -69,19 +69,19 @@ void Head::expandClause(Clause *clause, Z3_context context, unordered_map<int, l
     //    debugMapping(mapping);
     
     for(BoolExpression* expression : *(clause->expressions)) {
-        assertIt(context, expression->getAst(context, mapping));
+        assertIt(context, expression->getAst(context, mapping, k));
     }
     
     for(Head* head : *(clause->formulas)) {
-        head->expandHead(context, clauses, mapping, callStack);
+        head->expandHead(context, clauses, mapping, callStack, k);
     }
 }
 
-void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &clauses, map<string, string> mapping, map<int, pair<Clause*, int>> *callStack) {
+void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &clauses, map<string, string> mapping, map<int, pair<Clause*, int>> *callStack, int k) {
     
     std::cout << "Expanding h" << this->identifier << std::endl;
     
-    debugMapping(mapping);
+    // debugMapping(mapping);
     
     list<Clause*>* clauseList = clauses.find(this->identifier)->second;
     
@@ -104,6 +104,7 @@ void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &cl
                 
                 // We want to expand this cycle K_MAX times
                 callStack->insert(pair<int, pair<Clause*, int>>(this->identifier, pair<Clause*,int>(cycleClause, K_MAX)));
+                k = K_MAX;
             }
             
             // fillRecursionState(clauseList);
@@ -126,6 +127,25 @@ void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &cl
             
         } else {
             toExpand = ks.first;
+            k--;
+            
+            // Update mappings
+            
+            for(int i = 0; i < clause->head->vars.size(); i++) {
+                if(mapping.find(clause->head->vars[i]) != mapping.end()) {
+                    
+                    // Utterly incomplete!
+                    
+                    stringstream ss;
+                    
+                    ss << mapping[clause->head->vars[i]];
+                    
+                    ss << k;
+                    
+                    mapping[clause->head->vars[i]] = ss.str();
+                }
+            }
+            
         }
         
         if(cycleClause == NULL)
@@ -133,10 +153,9 @@ void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &cl
         
         std::cout << "Exploring branch of clause " << this->identifier << std::endl;
         
-        
         (*callStack)[this->identifier] = pair<Clause*, int>(toExpand, ks.second - 1);
         
-        expandClause(toExpand, context, clauses, mapping, callStack);
+        expandClause(toExpand, context, clauses, mapping, callStack, k);
         
         if(cycleClause == NULL)
             Z3_pop(context, 1);
@@ -144,7 +163,7 @@ void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &cl
         
         Clause *clause = clauseList->front();
         
-        expandClause(clause, context, clauses, mapping, callStack);
+        expandClause(clause, context, clauses, mapping, callStack, k);
         
     }
     
@@ -162,7 +181,7 @@ void Head::fillRecursionState(unordered_map<int, list<Clause*>*> &clauses, set<i
     bool setContains = calls.find(this->identifier) != calls.end();
     bool isToInsert = false;
     
-    if(this->identifier == lastAdded && setContains) {
+    if(setContains) {
         std::cout << "Setting " << this->identifier << " as CYCLE " << this->clause << std::endl;
         this->clause->recursionState = CYCLE;
         std::cout << "Erasing: " << this->identifier << " " << this->clause << std::endl;
@@ -186,7 +205,7 @@ void Head::fillRecursionState(unordered_map<int, list<Clause*>*> &clauses, set<i
             }
             
             clause->head->fillRecursionState(clauses, calls, lastAdded);
-
+            
             if(isToInsert) {
                 std::cout << "Erasing: " << this->identifier << " " << this->clause << std::endl;
                 calls.erase(this->identifier);
@@ -198,6 +217,6 @@ void Head::fillRecursionState(unordered_map<int, list<Clause*>*> &clauses, set<i
             }
         }
     }
-
+    
     
 }

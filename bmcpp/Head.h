@@ -21,7 +21,8 @@ using namespace std;
 
 class Head {
  
-    void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Clause*>*> &clauses, map<string, string> mapping, map<int, pair<Clause*, int>> *callStack);
+    void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Clause*>*> &clauses,
+                      map<string, string> mapping, map<int, pair<Clause*, int>> *callStack, int k);
     
 public:
     int identifier;
@@ -38,7 +39,7 @@ public:
 
     void expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &clauses);
     
-    void expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &clauses, map<string, string> mapping, map<int, pair<Clause*, int>> *callStack);
+    void expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &clauses, map<string, string> mapping, map<int, pair<Clause*, int>> *callStack, int k);
   
     void fillRecursionState(unordered_map<int, list<Clause*>*> &clauses, set<int>&, int);
     

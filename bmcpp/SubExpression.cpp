@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <map>
+#include <sstream>
 #include "helper.h"
 
 static map<int, Z3_ast> intMap;
@@ -50,7 +51,7 @@ SubExpression::SubExpression(string expr) {
     }
 }
 
-Z3_ast SubExpression::getAst(Z3_context context, map<string, string> mapping) {
+Z3_ast SubExpression::getAst(Z3_context context, map<string, string> mapping, int k) {
     
     if(this->value != "") {
         
@@ -61,15 +62,24 @@ Z3_ast SubExpression::getAst(Z3_context context, map<string, string> mapping) {
             // Remember to check the map!
             return mk_int(context, value);
         } else {
-            string actualValue = mapping.count(this->value) == 0 ? this->value : mapping[this->value];
-            return mk_str_var(context, actualValue.c_str());
+            
+            stringstream actualValue;
+            
+            if(mapping.count(this->value) == 0) {
+                actualValue << this->value;
+                actualValue << k;
+            } else {
+                actualValue << mapping[this->value];
+            }
+            
+            return mk_str_var(context, actualValue.str().c_str());
         }
         
     }
     
     Z3_ast operatorArgs[2];
-    operatorArgs[0] = this->leftExpr->getAst(context, mapping);
-    operatorArgs[1] = this->rightExpr->getAst(context, mapping);
+    operatorArgs[0] = this->leftExpr->getAst(context, mapping, k);
+    operatorArgs[1] = this->rightExpr->getAst(context, mapping, k);
     
     switch(this->operatorCode) {
         case '+':

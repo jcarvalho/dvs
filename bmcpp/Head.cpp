@@ -33,7 +33,7 @@ Head::Head(string headStr, Clause *cls) {
     for(string variable : variables) {
         vars.push_back(variable);
     }
-        
+    
 }
 
 Head::~Head() {
@@ -151,51 +151,34 @@ void Head::fillRecursionState(unordered_map<int, list<Clause*>*> &clauses, set<i
     std::cout << "Begin: " << this->identifier << std::endl;
     
     if(this->clause->recursionState != UNKNOWN) {
-        std::cout << "State known: " << (this->clause->recursionState == CYCLE) << std::endl;
+        std::cout << "State known: " << (this->identifier) << " : " << this->clause << std::endl;
         return;
     }
     
-    if(this->identifier != 0) {
-                
-        list<Clause*>* clauseList = clauses.find(this->identifier)->second;
+    if(calls.find(this->identifier) != calls.end()) {
+        std::cout << "Setting " << this->identifier << " as CYCLE " << this->clause << std::endl;
+        this->clause->recursionState = CYCLE;
+        calls.erase(this->identifier);
+        return;
+    } else if(clauses.find(this->identifier)->second->size() > 1) {
+        calls.insert(this->identifier);
+    }
+    
+    for(Head *h : *(this->clause->formulas)) {
         
-        if(clauseList->size() != 1) {
-            
-            std::cout << "Inside branch: " << this->identifier << ". Size: " << clauseList->size() << std::endl;
-            
-            if(calls.find(this->identifier) != calls.end()) {
-                
-                // Found a cycle!
-                std::cout << "Setting " << this->identifier << " as CYCLE " << this->clause << std::endl;
-                this->clause->recursionState = CYCLE;
-                calls.erase(this->identifier);
-                // std::cout << "We've been here twice now: " << this->clause << std::endl;
-                return;
-                
-            } else {
-                std::cout << "First time here: " << this->clause << std::endl;
-                calls.insert(this->identifier);
-            }
-            
-        }
+        list<Clause*>* clauseList = clauses.find(h->identifier)->second;
         
         for(Clause *clause : *clauseList) {
-            for(Head *h : *(clause->formulas))
-                h->fillRecursionState(clauses, calls);
+            clause->head->fillRecursionState(clauses, calls);
             
             if(clause->recursionState == UNKNOWN) {
-                std::cout << "Setting " << this->identifier << " as NOT_CYCLE " << clause << std::endl;
+                std::cout << "Setting " << clause->head->identifier << " as NOT_CYCLE " << clause << std::endl;
                 clause->recursionState = NOT_CYCLE;
-            } else {
-                std::cout << "Solar flare..." << (clause->recursionState == NOT_CYCLE) << std::endl;
             }
-            
         }
-        
-    } else {
-        for(Head *h : *(this->clause->formulas))
-            h->fillRecursionState(clauses, calls);
     }
+    
+    calls.erase(this->identifier);
     
     
 }

@@ -16,13 +16,14 @@
 #include <vector>
 #include "Clause.h"
 #include "BoolExpression.h"
+#include "MappingEntry.h"
 
 using namespace std;
 
 class Head {
  
     void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Clause*>*> &clauses,
-                      map<string, string> mapping, map<int, pair<Clause*, int>> *callStack, int k);
+                      map<string, MappingEntry*> mapping, map<int, pair<Clause*, int>> *callStack, int k);
     
 public:
     int identifier;
@@ -39,9 +40,9 @@ public:
 
     void expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &clauses);
     
-    void expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &clauses, map<string, string> mapping, map<int, pair<Clause*, int>> *callStack, int k);
+    void expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &clauses, map<string, MappingEntry *> mapping, map<int, pair<Clause*, int>> *callStack, int k);
   
-    void fillRecursionState(unordered_map<int, list<Clause*>*> &clauses, set<int>&, int);
+    void fillRecursionState(unordered_map<int, list<Clause*>*> &clauses, set<int>&);
     
 };
 

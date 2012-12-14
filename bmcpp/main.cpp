@@ -101,7 +101,7 @@ int main(int argc, const char * argv[])
         
         set<int> st;
         
-        (*local_it)->head->fillRecursionState(clauses, st, -1);
+        (*local_it)->head->fillRecursionState(clauses, st);
         
     }
     
@@ -144,24 +144,6 @@ int main(int argc, const char * argv[])
         
         (*local_it)->formulas->front()->expandHead(context, clauses);
     }
-    
-    Z3_model model2;
-    
-    switch (Z3_check_and_get_model(context, &model2)) {
-        case Z3_L_FALSE:
-            printf("Z3_L_FALSE\n");
-            break;
-        case Z3_L_UNDEF:
-            printf("Z3_L_UNDEF\n");
-            break;
-        case Z3_L_TRUE:
-            printf("Z3_L_TRUE\n");
-            break;
-    }
-    
-    
-    printf("Model:\n%s", Z3_model_to_string(context, model2));
-    
     
     return 0;
 }

@@ -51,7 +51,7 @@ SubExpression::SubExpression(string expr) {
     }
 }
 
-Z3_ast SubExpression::getAst(Z3_context context, map<string, string> mapping, int k) {
+Z3_ast SubExpression::getAst(Z3_context context, map<string, MappingEntry*> mapping, int k) {
     
     if(this->value != "") {
         
@@ -69,7 +69,7 @@ Z3_ast SubExpression::getAst(Z3_context context, map<string, string> mapping, in
                 actualValue << this->value;
                 actualValue << k;
             } else {
-                actualValue << mapping[this->value];
+                actualValue << mapping[this->value]->getZ3Name();
             }
             
             return mk_str_var(context, actualValue.str().c_str());

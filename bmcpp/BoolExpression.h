@@ -13,6 +13,7 @@
 #include <z3.h>
 #include <map>
 #include "SubExpression.h"
+#include "MappingEntry.h"
 
 using namespace std;
 
@@ -27,7 +28,7 @@ public:
     
     BoolExpression(string expr);
     
-    Z3_ast getAst(Z3_context context, map<string, string> mapping, int k);
+    Z3_ast getAst(Z3_context context, map<string, MappingEntry*> mapping, int k);
     
 };
 

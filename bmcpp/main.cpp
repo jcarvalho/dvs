@@ -18,6 +18,16 @@
 
 using namespace std;
 
+Clause* getCycleClause(list<Clause *> *clauses, RecursionState state) {
+    
+    for(Clause *clause : (*clauses)) {
+        if(clause->recursionState == state) {
+            return clause;
+        }
+    }
+    return NULL;
+}
+
 int main(int argc, const char * argv[])
 {
     
@@ -27,7 +37,7 @@ int main(int argc, const char * argv[])
     }
     
     const char *path = argv[1];
-
+    
     ifstream infile(path, ifstream::in);
     
     string line;
@@ -54,9 +64,9 @@ int main(int argc, const char * argv[])
         Clause *clause = new Clause();
         
         Head *head = new Head(tokens[0], clause);
-                
+        
         clause->head = head;
-                
+        
         for(int i = 2; i < tokens.size(); i++) {
             string item = tokens[i];
             if(item.c_str()[0] == 'h') {
@@ -69,7 +79,7 @@ int main(int argc, const char * argv[])
         }
         
         unordered_map<int, list<Clause*>*>::const_iterator iterator = clauses.find(head->identifier);
-
+        
         list<Clause*> *clauseList;
         
         if(iterator == clauses.end()) {
@@ -93,9 +103,48 @@ int main(int argc, const char * argv[])
         
         (*local_it)->head->fillRecursionState(clauses, st, -1);
         
+    }
+    
+    for ( auto local_it = clauses.begin(); local_it != clauses.end(); local_it++) {
+        
+        if((*local_it).second->size() <= 1)
+            continue;
+        
+        Clause *cycleToExpand = getCycleClause((*local_it).second, CYCLE);
+
+        if(cycleToExpand == NULL)
+            continue;
+        
+        Clause *iter = cycleToExpand;
+        
+        while(1) {
+            
+            Head *headToExpand = iter->formulas->front();
+            
+            list<Clause *> *headClauses = clauses[headToExpand->identifier];
+            
+            if(cycleToExpand == getCycleClause(headClauses, CYCLE)) {
+                std::cout << "Clause " << cycleToExpand->head->identifier << " @ " << cycleToExpand << " is actually a cycle!" << std::endl;
+                std::cout << "--> " << cycleToExpand->formulas->front()->identifier << std::endl;
+                break;
+            }
+            
+            iter = getCycleClause(headClauses, NOT_CYCLE);
+            
+            if(iter->formulas->size() == 0) {
+                std::cout << "Clause " << cycleToExpand->head->identifier << " @ " << cycleToExpand << " was not a cycle after all!" << std::endl;
+                cycleToExpand->recursionState = NOT_CYCLE;
+                break;
+            }
+        }
+        
+    }
+    
+    for ( auto local_it = falseClauses->begin(); local_it!= falseClauses->end(); ++local_it ) {
+        
         (*local_it)->formulas->front()->expandHead(context, clauses);
     }
-
+    
     Z3_model model2;
     
     switch (Z3_check_and_get_model(context, &model2)) {

@@ -42,7 +42,7 @@ int main(int argc, const char * argv[])
     
     string line;
     
-    unordered_map<int, list<Clause*>*> clauses;
+    unordered_map<int, list<Clause*>*> *clauses = new unordered_map<int, list<Clause *>*>();
     
     int i = 0;
     
@@ -78,13 +78,13 @@ int main(int argc, const char * argv[])
             }
         }
         
-        unordered_map<int, list<Clause*>*>::const_iterator iterator = clauses.find(head->identifier);
+        unordered_map<int, list<Clause*>*>::const_iterator iterator = clauses->find(head->identifier);
         
         list<Clause*> *clauseList;
         
-        if(iterator == clauses.end()) {
+        if(iterator == clauses->end()) {
             clauseList = new list<Clause*>();
-            clauses.insert(pair<int, list<Clause*>*>(head->identifier, clauseList));
+            clauses->insert(pair<int, list<Clause*>*>(head->identifier, clauseList));
         } else {
             clauseList = iterator->second;
         }
@@ -95,7 +95,7 @@ int main(int argc, const char * argv[])
     
     std::cout << "Parsing done, now expanding..." << std::endl;
     
-    std::list<Clause *> *falseClauses = clauses.find(0)->second;
+    std::list<Clause *> *falseClauses = clauses->find(0)->second;
     
     for ( auto local_it = falseClauses->begin(); local_it!= falseClauses->end(); ++local_it ) {
         
@@ -105,7 +105,7 @@ int main(int argc, const char * argv[])
         
     }
     
-    for ( auto local_it = clauses.begin(); local_it != clauses.end(); local_it++) {
+    for ( auto local_it = clauses->begin(); local_it != clauses->end(); local_it++) {
         
         if((*local_it).second->size() <= 1)
             continue;
@@ -121,7 +121,7 @@ int main(int argc, const char * argv[])
             
             Head *headToExpand = iter->formulas->front();
             
-            list<Clause *> *headClauses = clauses[headToExpand->identifier];
+            list<Clause *> *headClauses = (*clauses)[headToExpand->identifier];
             
             if(cycleToExpand == getCycleClause(headClauses, CYCLE)) {
                 std::cout << "Clause " << cycleToExpand->head->identifier << " @ " << cycleToExpand << " is actually a cycle!" << std::endl;
@@ -142,8 +142,10 @@ int main(int argc, const char * argv[])
     
     for ( auto local_it = falseClauses->begin(); local_it!= falseClauses->end(); ++local_it ) {
         
-        (*local_it)->formulas->front()->expandHead(context, &clauses);
+        (*local_it)->formulas->front()->expandHead(context, clauses);
     }
+    
+    delete clauses;
     
     std::cout << "Congratulations, your program is correct!" << std::endl;
     

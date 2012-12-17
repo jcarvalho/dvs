@@ -50,15 +50,18 @@ string Head::toString() {
  */
 void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> *clauses) {
     
-    map<string, int> mapping;
+    map<string, int> *mapping = new map<string, int>();
     
-    map<int, pair<Clause*, int>> callStack;
+    map<int, pair<Clause*, int>> *callStack = new map<int, pair<Clause*, int>>();
     
     for(string variable : this->vars) {
-        mapping.insert(pair<string, int>(variable, 0));
+        mapping->insert(pair<string, int>(variable, 0));
     }
     
-    return expandHead(context, clauses, &mapping, &callStack);
+    expandHead(context, clauses, mapping, callStack);
+    
+    delete callStack;
+    delete mapping;
 }
 
 /*
@@ -203,7 +206,7 @@ void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> *cl
     
 }
 
-void Head::fillRecursionState(unordered_map<int, list<Clause*>*> &clauses, set<int> &calls) {
+void Head::fillRecursionState(unordered_map<int, list<Clause*>*> *clauses, set<int> &calls) {
     
     std::cout << "Begin: " << this->identifier << std::endl;
     
@@ -222,13 +225,13 @@ void Head::fillRecursionState(unordered_map<int, list<Clause*>*> &clauses, set<i
         calls.erase(this->identifier);
         return;
     } else if(this->identifier != 0 && !setContains &&
-              clauses.find(this->identifier)->second->size() > 1) {
+              clauses->find(this->identifier)->second->size() > 1) {
         isToInsert = true;
     }
     
     for(Head *h : *(this->clause->formulas)) {
         
-        list<Clause*>* clauseList = clauses.find(h->identifier)->second;
+        list<Clause*>* clauseList = clauses->find(h->identifier)->second;
         
         for(Clause *clause : *clauseList) {
             

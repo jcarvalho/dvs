@@ -9,7 +9,7 @@
 #ifndef __bmcpp__split__
 #define __bmcpp__split__
 
-#define K_MAX 500
+#define K_MAX 600
 
 #include <iostream>
 #include <vector>

@@ -11,7 +11,6 @@
 		E03123F3165FD5110090D66A /* Clause.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E03123F1165FD5110090D66A /* Clause.cpp */; };
 		E03123F6165FD5390090D66A /* Head.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E03123F4165FD5390090D66A /* Head.cpp */; };
 		E0312401165FDCAB0090D66A /* BoolExpression.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E03123FF165FDCAB0090D66A /* BoolExpression.cpp */; };
-		E0541E9D167B751F0051EBA9 /* MappingEntry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E0541E9B167B751F0051EBA9 /* MappingEntry.cpp */; };
 		E066DF2F1665088C00BCE7DE /* SubExpression.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E066DF2D1665088C00BCE7DE /* SubExpression.cpp */; };
 		E066DF3316650DEA00BCE7DE /* helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E066DF3116650DEA00BCE7DE /* helper.cpp */; };
 /* End PBXBuildFile section */
@@ -37,8 +36,6 @@
 		E03123F5165FD5390090D66A /* Head.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Head.h; sourceTree = "<group>"; };
 		E03123FF165FDCAB0090D66A /* BoolExpression.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BoolExpression.cpp; sourceTree = "<group>"; };
 		E0312400165FDCAB0090D66A /* BoolExpression.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BoolExpression.h; sourceTree = "<group>"; };
-		E0541E9B167B751F0051EBA9 /* MappingEntry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MappingEntry.cpp; sourceTree = "<group>"; };
-		E0541E9C167B751F0051EBA9 /* MappingEntry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MappingEntry.h; sourceTree = "<group>"; };
 		E066DF2D1665088C00BCE7DE /* SubExpression.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SubExpression.cpp; sourceTree = "<group>"; };
 		E066DF2E1665088C00BCE7DE /* SubExpression.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SubExpression.h; sourceTree = "<group>"; };
 		E066DF3116650DEA00BCE7DE /* helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = helper.cpp; sourceTree = "<group>"; };
@@ -86,8 +83,6 @@
 				E03123F5165FD5390090D66A /* Head.h */,
 				E03123FF165FDCAB0090D66A /* BoolExpression.cpp */,
 				E0312400165FDCAB0090D66A /* BoolExpression.h */,
-				E0541E9B167B751F0051EBA9 /* MappingEntry.cpp */,
-				E0541E9C167B751F0051EBA9 /* MappingEntry.h */,
 			);
 			path = bmcpp;
 			sourceTree = "<group>";
@@ -149,7 +144,6 @@
 				E0312401165FDCAB0090D66A /* BoolExpression.cpp in Sources */,
 				E066DF2F1665088C00BCE7DE /* SubExpression.cpp in Sources */,
 				E066DF3316650DEA00BCE7DE /* helper.cpp in Sources */,
-				E0541E9D167B751F0051EBA9 /* MappingEntry.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

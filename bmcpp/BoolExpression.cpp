@@ -32,14 +32,21 @@ BoolExpression::BoolExpression(string expr) {
     this->rightOperand = new SubExpression(rightExpr);
 }
 
-Z3_ast BoolExpression::getAst(Z3_context context, map<string, MappingEntry*> mapping, int k) {
+Z3_ast BoolExpression::getAst(Z3_context context, map<string, int> *mapping, map<string, string> newVars) {
     
-    Z3_ast left = this->leftOperand->getAst(context, mapping, k);
-    Z3_ast right = this->rightOperand->getAst(context, mapping, k);
-    
+    Z3_ast left = this->leftOperand->getAst(context, mapping, newVars);
+
     if(this->operatorCode == "=") {
+        
+        string varToUpdate = newVars[this->leftOperand->value];
+        
+        (*mapping)[varToUpdate]++;
+        
+        Z3_ast right = this->rightOperand->getAst(context, mapping, newVars);
         return Z3_mk_eq(context, left, right);
     }
+    
+    Z3_ast right = this->rightOperand->getAst(context, mapping, newVars);
     
     if(this->operatorCode == "<") {
         return Z3_mk_lt(context, left, right);

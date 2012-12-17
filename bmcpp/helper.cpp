@@ -39,17 +39,17 @@ Z3_ast mk_str_var(Z3_context ctx, const char *name) {
 }
 
 void assertIt(Z3_context context, Z3_ast ast) {
-    std::cout << "Asserting " << Z3_ast_to_string(context, ast) << std::endl;
+    std::cout << "\t\tAsserting " << Z3_ast_to_string(context, ast) << std::endl;
     Z3_assert_cnstr(context, ast);
 }
 
-void debugMapping(std::map<string, string> mapping) {
+void debugMapping(std::map<string, int> *mapping) {
     
     std::stringstream ss(stringstream::out);
     
     ss << "{";
     
-    for(auto it = mapping.begin(); it != mapping.end(); it++) {
+    for(auto it = mapping->begin(); it != mapping->end(); it++) {
         ss << " " << it->first << "=" << it->second;
     }
     

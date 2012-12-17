@@ -12,7 +12,6 @@
 #include <iostream>
 #include <map>
 #include <z3.h>
-#include "MappingEntry.h"
 
 using namespace std;
 
@@ -30,7 +29,7 @@ public:
     
     SubExpression(string expr);
     
-    Z3_ast getAst(Z3_context context, map<string, MappingEntry*> mapping, int k);
+    Z3_ast getAst(Z3_context context, map<string, int> *mapping, map<string, string>);
     
 };
 

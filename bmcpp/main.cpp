@@ -145,6 +145,8 @@ int main(int argc, const char * argv[])
         (*local_it)->formulas->front()->expandHead(context, clauses);
     }
     
+    std::cout << "Congratulations, your program is correct!" << std::endl;
+    
     return 0;
 }
 

@@ -9,7 +9,7 @@
 #ifndef __bmcpp__split__
 #define __bmcpp__split__
 
-#define K_MAX 2
+#define K_MAX 1
 
 #include <iostream>
 #include <vector>
@@ -26,6 +26,6 @@ std::vector<std::string> split(const std::string &s, char delim);
 
 void assertIt(Z3_context context, Z3_ast ast);
 
-void debugMapping(map<string, string> mapping);
+void debugMapping(map<string, int> *mapping);
 
 #endif /* defined(__bmcpp__split__) */

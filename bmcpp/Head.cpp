@@ -48,7 +48,7 @@ string Head::toString() {
 /*
  * Called from main
  */
-void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &clauses) {
+void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> *clauses) {
     
     map<string, int> mapping;
     
@@ -64,20 +64,20 @@ void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &cl
 /*
  * Called from recursive expandHead
  */
-void Head::expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Clause*>*> &clauses, map<string, int> *mapping,
+void Head::expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Clause*>*> *clauses, map<string, int> *mapping,
                         map<int, pair<Clause*, int>> *callStack) {
     
     std::cout << "Expanding h" << this->identifier << std::endl;
     // debugMapping(mapping);
     
-    map<string, string> newVariables;
+    map<string, string> *newVariables = new map<string, string>();
     
     if(clause->formulas->size() > 0) {
         
         unsigned long bound = min(clause->formulas->front()->vars.size(), clause->head->vars.size());
         
         for(int i = 0; i < bound; i++) {
-            newVariables.insert(pair<string, string>(clause->formulas->front()->vars[i],
+            newVariables->insert(pair<string, string>(clause->formulas->front()->vars[i],
                                                      clause->head->vars[i]));
         }
         
@@ -88,6 +88,8 @@ void Head::expandClause(Clause *clause, Z3_context context, unordered_map<int, l
     for(BoolExpression* expression : *(clause->expressions)) {
         assertIt(context, expression->getAst(context, mapping, newVariables));
     }
+    
+    delete newVariables;
     
     if(clause->formulas->size() == 0) {
         
@@ -110,10 +112,10 @@ void Head::expandClause(Clause *clause, Z3_context context, unordered_map<int, l
 /*
  * Called by expandClause
  */
-void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &clauses, map<string, int> *mapping,
+void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> *clauses, map<string, int> *mapping,
                       map<int, pair<Clause*, int>> *callStack) {
     
-    list<Clause*>* clauseList = clauses.find(this->identifier)->second;
+    list<Clause*>* clauseList = clauses->find(this->identifier)->second;
     
     if(clauseList->size() != 1) {
         
@@ -144,7 +146,7 @@ void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &cl
             
             std::cout << "CallStack: " << ks.second << ". Cycle clause: " << cycleClause << std::endl;
             
-            Clause* toExpand;
+            Clause* toExpand = NULL;
             
             if(ks.second == 0) {
                 
@@ -157,6 +159,11 @@ void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &cl
                 
             } else {
                 toExpand = ks.first;
+            }
+            
+            if(toExpand == NULL) {
+                std::cerr << "Solar flare detected!" << std::endl;
+                exit(-2);
             }
             
             std::cout << "Exploring LOOP branch of clause " << this->identifier << std::endl;
@@ -175,10 +182,12 @@ void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> &cl
             for(Clause *clause : *clauseList) {
                 Z3_push(context);
                 
-                map<string, int> newMapping(*mapping);
+                map<string, int> *newMapping = new map<string, int>(*mapping);
                 
                 std::cout << "Exploring IF branch of clause " << this->identifier << std::endl;
-                expandClause(clause, context, clauses, &newMapping, callStack);
+                expandClause(clause, context, clauses, newMapping, callStack);
+                
+                delete newMapping;
                 
                 Z3_pop(context, 1);
             }

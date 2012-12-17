@@ -142,7 +142,7 @@ int main(int argc, const char * argv[])
     
     for ( auto local_it = falseClauses->begin(); local_it!= falseClauses->end(); ++local_it ) {
         
-        (*local_it)->formulas->front()->expandHead(context, clauses);
+        (*local_it)->formulas->front()->expandHead(context, &clauses);
     }
     
     std::cout << "Congratulations, your program is correct!" << std::endl;

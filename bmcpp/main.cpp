@@ -54,8 +54,8 @@ int main(int argc, const char * argv[])
     while (getline(infile, line))
     {
         i++;
-        
-        line = std::regex_replace(line, regex, "0-");
+        std:string replaceStr = "0-"; 
+        line = std::regex_replace(line, regex, replaceStr);
         
         vector<string> tokens = split(line, ' ');
         

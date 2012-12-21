@@ -253,9 +253,11 @@ void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*
                 auto it = clauseList->begin();
                 
                 Clause *clause = *it;
-                
+		std:cout << " branch clause " << clause->head->identifier << " is end? " << clause->endClause << " pendings: " << pendings << std::endl;
+
                 while(it != clauseList->end() && clause->endClause && pendings != 0) {
                     clause = *(++it);
+		    cout << " branch clause " << clause->head->identifier << " is end? " << clause->endClause << " pendings: " << pendings << std::endl;
                 }
                 
                 Z3_push(context);
@@ -265,6 +267,7 @@ void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*
                 Checkpoint *cp;
                 
                 if(it != clauseList->end() && (!clause->endClause || (clause->endClause && pendings == 0))) {
+		    cout << "expanding one of the previous branch clauses" << endl;
                     expandClause(clause, context, clauses, newMapping, callStack, pendings, nextHead->vars);
                     // Expand Last right head, and add the rest to the queue
                     // Note that it SHOULD be the "function" call head
@@ -283,7 +286,9 @@ void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*
                     pendings--;
                     
                     delete cp;
-                } else if(it == clauseList->end() || (clause->endClause && pendings != 0)) {
+                } 
+
+		if(it == clauseList->end() || (clause->endClause && pendings != 0)) {
                     Checkpoint *cp = popCheckpoint(checkpoints, callStack);
                     if(cp == NULL) {
                         break;
@@ -298,6 +303,8 @@ void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*
                     
                     continue;
                 } else {
+		    cout << "adding the other branches not explored as checkpoints " << endl;
+		    ++it;
                     while(it != clauseList->end()) {
                         cp = new Checkpoint();
                         
@@ -305,9 +312,10 @@ void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*
                         cp->mapping = newMapping;
                         
                         // TODO: There could be more than one!
-                        cp->head = (*it)->formulas->front();
+                        cp->head = (*(it))->formulas->front();
                         
                         checkpoints->push_front(cp);
+			it++;
                     }
                 }
             }

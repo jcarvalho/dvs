@@ -63,6 +63,9 @@ void debugMapping(std::map<string, string> *mapping) {
 
 string genNewVar(string inputVar) {
     varGenerator++;
-    std::cout << "Generating " << inputVar << " as " << varGenerator << std::endl;
-    return std::to_string(varGenerator);
+    std::stringstream ss;
+    
+    ss << inputVar << varGenerator;
+
+    return ss.str();
 }

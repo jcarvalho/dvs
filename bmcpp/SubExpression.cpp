@@ -51,7 +51,7 @@ SubExpression::SubExpression(string expr) {
     }
 }
 
-Z3_ast SubExpression::getAst(Z3_context context, map<string, string> *mapping, map<string, string> *newVars) {
+Z3_ast SubExpression::getAst(Z3_context context, map<string, string> *mapping) {
     
     if(this->value != "") {
         
@@ -65,10 +65,10 @@ Z3_ast SubExpression::getAst(Z3_context context, map<string, string> *mapping, m
             
             stringstream actualValue;
             
-            if(newVars->find(this->value) == newVars->end()) {
-                actualValue <</* this->value << */ (*mapping)[this->value];
+            if(mapping->find(this->value) != mapping->end()) {
+                actualValue << (*mapping)[this->value];
             } else {
-                actualValue <</* (*newVars)[this->value] << */(*mapping)[(*newVars)[this->value]];
+                actualValue << this->value;
             }
             return mk_str_var(context, actualValue.str().c_str());
         }
@@ -76,8 +76,8 @@ Z3_ast SubExpression::getAst(Z3_context context, map<string, string> *mapping, m
     }
     
     Z3_ast operatorArgs[2];
-    operatorArgs[0] = this->leftExpr->getAst(context, mapping, newVars);
-    operatorArgs[1] = this->rightExpr->getAst(context, mapping, newVars);
+    operatorArgs[0] = this->leftExpr->getAst(context, mapping);
+    operatorArgs[1] = this->rightExpr->getAst(context, mapping);
     
     switch(this->operatorCode) {
         case '+':

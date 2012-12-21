@@ -13,6 +13,7 @@
 class Checkpoint {
 public:
     bool isCycle;
+    bool isPending;
     int identifier;
     int k;
     Clause *clause;
@@ -62,30 +63,16 @@ void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Cl
                   map<int, pair<Clause*, int>> *callStack) {
     
     std::cout << "Expanding h" << clause->head->identifier << std::endl;
-    // debugMapping(mapping);
     
-    map<string, string> *newVariables = new map<string, string>();
-    
-    if(clause->formulas->size() > 0) {
-        
-        // FIXME There can be more than one formula...
-        
-        unsigned long bound = min(clause->formulas->front()->vars.size(), clause->head->vars.size());
-        
-        for(int i = 0; i < bound; i++) {
-            newVariables->insert(pair<string, string>(clause->formulas->front()->vars[i],
-                                                      clause->head->vars[i]));
-        }
-        
-    }
+    // TODO: Update mapping
     
     debugMapping(mapping);
     
     for(BoolExpression* expression : *(clause->expressions)) {
-        assertIt(context, expression->getAst(context, mapping, newVariables));
+        assertIt(context, expression->getAst(context, mapping));
     }
     
-    delete newVariables;
+    // TODO: Check is we're not in the and case
     
     if(clause->formulas->size() == 0) {
         
@@ -95,7 +82,7 @@ void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Cl
         
         if(Z3_check_and_get_model(context, &model2) == Z3_L_TRUE) {
             printf("Program is not correct! Model:\n%s", Z3_model_to_string(context, model2));
-            exit(1);
+            exit(-1);
         }
         
     }
@@ -108,11 +95,12 @@ Checkpoint* popCheckpoint(list<Checkpoint*> *heads, map<int, pair<Clause *, int>
     while(heads->size() != 0) {
         cp = heads->front();
         heads->pop_front();
-        if(!cp->isCycle) {
+        if(!cp->isCycle || cp->isPending) {
             return cp;
         }
         
         (*callStack)[cp->identifier] = pair<Clause*, int>(cp->clause, cp->k);
+        delete cp;
     }
     
     return NULL;
@@ -122,10 +110,10 @@ Checkpoint* popCheckpoint(list<Checkpoint*> *heads, map<int, pair<Clause *, int>
  * Called by init
  */
 void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*>*> *clauses, map<string, string> *mapping,
-                map<int, pair<Clause*, int>> *callStack) {
+                 map<int, pair<Clause*, int>> *callStack) {
     
     list<Checkpoint*> *checkpoints = new list<Checkpoint*>();
-    
+        
     // Right head
     Head *nextHead = head;
     
@@ -216,8 +204,21 @@ void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*
                     checkpoints->push_front(cp);
                 }
                 
-                // NOTE: Assume only one formula
-                nextHead = toExpand->formulas->front();
+                // Expand Last right head, and add the rest to the queue
+                // Note that it SHOULD be the "function" call head
+                for(Head* head : (*(toExpand->formulas))) {
+                    Checkpoint *cp = new Checkpoint();
+                    cp->isPending = true;
+                    cp->head = head;
+                    checkpoints->push_front(cp);
+                }
+                
+                Checkpoint *cp = checkpoints->front();
+                
+                nextHead = cp->head;
+                checkpoints->pop_front();
+                
+                delete cp;
                 
             } else {
                 
@@ -228,10 +229,23 @@ void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*
                 
                 map<string, string> *newMapping = new map<string, string>(*mapping);
                 
-                // NOTE: Assume only one formula
-                nextHead = clause->formulas->front();
+                // Expand Last right head, and add the rest to the queue
+                // Note that it SHOULD be the "function" call head
+                for(Head* head : (*(clause->formulas))) {
+                    Checkpoint *cp = new Checkpoint();
+                    cp->isPending = true;
+                    cp->head = head;
+                    checkpoints->push_front(cp);
+                }
                 
-                Checkpoint *cp = new Checkpoint();
+                Checkpoint *cp = checkpoints->front();
+                
+                nextHead = cp->head;
+                checkpoints->pop_front();
+                
+                delete cp;
+                
+                cp = new Checkpoint();
                 
                 cp->isCycle = false;
                 cp->mapping = newMapping;
@@ -239,6 +253,8 @@ void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*
                 auto it = clauseList->begin();
                 it++;
                 cp->head = (*it)->formulas->front();
+                
+                checkpoints->push_front(cp);
                 
                 expandClause(clause, context, clauses, newMapping, callStack);
                 
@@ -250,20 +266,29 @@ void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*
             
             expandClause(nextClause, context, clauses, mapping, callStack);
             
-            if(nextClause->formulas->size() == 0) {
+            if(nextClause->endClause) {
                 Checkpoint *cp = popCheckpoint(checkpoints, callStack);
-                if(cp == NULL)
-                    break;
+                if(cp == NULL) {
+                    if(pendingHeads->empty())
+                        break;
+                }
                 
                 mapping = cp->mapping;
                 
-                // TODO NextHead not defined!
-                
+                nextHead = cp->head;
+                                
                 continue;
+            } else {
+                
+                // Expand Last right head, and add the rest to the queue
+                // Note that it SHOULD be the "function" call head
+                for(Head* head : (*(nextClause->formulas))) {
+                    pendingHeads->push_front(head);
+                }
+                
+                nextHead = pendingHeads->front();
+                pendingHeads->pop_front();
             }
-            
-            // NOTE: Assume only one formula
-            nextHead = nextClause->formulas->front();
         }
     }
     
@@ -364,7 +389,7 @@ void Head::fillUnboundVars() {
             return;
         }
     }
-
+    
     for(auto it = allVars->begin(); it != allVars->end(); it++) {
         if(std::find(vars.begin(), vars.end(), (*it)) == vars.end()) {
             std::cout << "In clause " << this->identifier << ", " << (*it) << " is unbound!" << std::endl;

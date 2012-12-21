@@ -9,6 +9,7 @@
 #include "Head.h"
 #include "helper.h"
 #include <sstream>
+#include <algorithm>
 
 class Checkpoint {
 public:

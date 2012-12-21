@@ -14,7 +14,6 @@
 #include "Clause.h"
 #include "BoolExpression.h"
 #include <unordered_map>
-#include <regex>
 
 using namespace std;
 
@@ -26,6 +25,16 @@ Clause* getCycleClause(list<Clause *> *clauses, RecursionState state) {
         }
     }
     return NULL;
+}
+
+void replaceAll(std::string& str, const std::string& from, const std::string& to) {
+    if(from.empty())
+        return;
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+    }
 }
 
 int main(int argc, const char * argv[])
@@ -49,13 +58,10 @@ int main(int argc, const char * argv[])
     Z3_config config = Z3_mk_config();
     Z3_context context = Z3_mk_context(config);
     
-    std::regex regex(" -");
-    
     while (getline(infile, line))
     {
         i++;
-        std:string replaceStr = "0-"; 
-        line = std::regex_replace(line, regex, replaceStr);
+	replaceAll(line, " -", "0-");
         
         vector<string> tokens = split(line, ' ');
         

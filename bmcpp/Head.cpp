@@ -60,11 +60,15 @@ string Head::toString() {
  * Called from recursive expandHead
  */
 void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Clause*>*> *clauses, map<string, string> *mapping,
-                  map<int, pair<Clause*, int>> *callStack) {
+                  map<int, pair<Clause*, int>> *callStack, int nPending) {
     
     std::cout << "Expanding h" << clause->head->identifier << std::endl;
     
-    // TODO: Update mapping
+    // Update mapping
+    
+    for(string varToCreate : (*(clause->unboundVars))) {
+        (*mapping)[varToCreate] = genNewVar(varToCreate);
+    }
     
     debugMapping(mapping);
     
@@ -72,9 +76,9 @@ void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Cl
         assertIt(context, expression->getAst(context, mapping));
     }
     
-    // TODO: Check is we're not in the and case
+    // Check if we're not in the and case
     
-    if(clause->formulas->size() == 0) {
+    if(clause->endClause && nPending == 0) {
         
         std::cout << "Calling Z3..." << std::endl;
         
@@ -112,8 +116,10 @@ Checkpoint* popCheckpoint(list<Checkpoint*> *heads, map<int, pair<Clause *, int>
 void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*>*> *clauses, map<string, string> *mapping,
                  map<int, pair<Clause*, int>> *callStack) {
     
+    int pendings = 0;
+    
     list<Checkpoint*> *checkpoints = new list<Checkpoint*>();
-        
+    
     // Right head
     Head *nextHead = head;
     
@@ -175,9 +181,9 @@ void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*
                 if(toExpand->recursionState == CYCLE && ks.second > 0)
                     (*callStack)[nextHead->identifier] = pair<Clause*, int>(toExpand, ks.second - 1);
                 
-                expandClause(toExpand, context, clauses, mapping, callStack);
+                expandClause(toExpand, context, clauses, mapping, callStack, pendings);
                 
-                if(toExpand->formulas->size() == 0) {
+                if(toExpand->endClause) {
                     Checkpoint *cp = popCheckpoint(checkpoints, callStack);
                     if(cp == NULL)
                         break;
@@ -185,7 +191,10 @@ void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*
                     delete mapping;
                     Z3_pop(context, 1);
                     
-                    mapping = cp->mapping;
+                    if(!cp->isPending)
+                        mapping = cp->mapping;
+                    else
+                        pendings--;
                     
                     nextHead = cp->head;
                     
@@ -211,6 +220,7 @@ void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*
                     cp->isPending = true;
                     cp->head = head;
                     checkpoints->push_front(cp);
+                    pendings++;
                 }
                 
                 Checkpoint *cp = checkpoints->front();
@@ -236,6 +246,7 @@ void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*
                     cp->isPending = true;
                     cp->head = head;
                     checkpoints->push_front(cp);
+                    pendings++;
                 }
                 
                 Checkpoint *cp = checkpoints->front();
@@ -256,7 +267,7 @@ void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*
                 
                 checkpoints->push_front(cp);
                 
-                expandClause(clause, context, clauses, newMapping, callStack);
+                expandClause(clause, context, clauses, newMapping, callStack, pendings);
                 
             }
             
@@ -264,30 +275,40 @@ void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*
             
             Clause *nextClause = clauseList->front();
             
-            expandClause(nextClause, context, clauses, mapping, callStack);
+            expandClause(nextClause, context, clauses, mapping, callStack, pendings);
             
             if(nextClause->endClause) {
                 Checkpoint *cp = popCheckpoint(checkpoints, callStack);
                 if(cp == NULL) {
-                    if(pendingHeads->empty())
-                        break;
+                    break;
                 }
                 
-                mapping = cp->mapping;
+                if(!cp->isPending)
+                    mapping = cp->mapping;
+                else
+                    pendings--;
                 
                 nextHead = cp->head;
-                                
+                
                 continue;
             } else {
                 
                 // Expand Last right head, and add the rest to the queue
                 // Note that it SHOULD be the "function" call head
                 for(Head* head : (*(nextClause->formulas))) {
-                    pendingHeads->push_front(head);
+                    Checkpoint *cp = new Checkpoint();
+                    cp->isPending = true;
+                    cp->head = head;
+                    checkpoints->push_front(cp);
+                    pendings++;
                 }
                 
-                nextHead = pendingHeads->front();
-                pendingHeads->pop_front();
+                Checkpoint *cp = checkpoints->front();
+                
+                nextHead = cp->head;
+                checkpoints->pop_front();
+                
+                delete cp;
             }
         }
     }

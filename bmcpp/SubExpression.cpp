@@ -65,11 +65,16 @@ Z3_ast SubExpression::getAst(Z3_context context, map<string, string> *mapping) {
             
             stringstream actualValue;
             
+            actualValue << '"';
+            
             if(mapping->find(this->value) != mapping->end()) {
                 actualValue << (*mapping)[this->value];
             } else {
                 actualValue << this->value;
             }
+            
+            actualValue << '"';
+            
             return mk_str_var(context, actualValue.str().c_str());
         }
         

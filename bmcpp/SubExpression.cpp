@@ -51,7 +51,7 @@ SubExpression::SubExpression(string expr) {
     }
 }
 
-Z3_ast SubExpression::getAst(Z3_context context, map<string, int> *mapping, map<string, string> *newVars) {
+Z3_ast SubExpression::getAst(Z3_context context, map<string, string> *mapping, map<string, string> *newVars) {
     
     if(this->value != "") {
         
@@ -66,9 +66,9 @@ Z3_ast SubExpression::getAst(Z3_context context, map<string, int> *mapping, map<
             stringstream actualValue;
             
             if(newVars->find(this->value) == newVars->end()) {
-                actualValue << this->value << (*mapping)[this->value];
+                actualValue <</* this->value << */ (*mapping)[this->value];
             } else {
-                actualValue << (*newVars)[this->value] << (*mapping)[(*newVars)[this->value]];
+                actualValue <</* (*newVars)[this->value] << */(*mapping)[(*newVars)[this->value]];
             }
             return mk_str_var(context, actualValue.str().c_str());
         }
@@ -91,6 +91,20 @@ Z3_ast SubExpression::getAst(Z3_context context, map<string, int> *mapping, map<
         default:
             std::cerr << "Error, cannot generate AST for expression! Unknown Operator: " << this->operatorCode << std::endl;
             exit(-1);
+    }
+}
+
+void SubExpression::collectVars(set<string> *vars) {
+    if(this->value != "") {
+        
+        char firstChar = this->value.at(0);
+        
+        if(firstChar < '0' || firstChar > '9') {
+            vars->insert(this->value);
+        }
+    } else {
+        this->leftExpr->collectVars(vars);
+        this->rightExpr->collectVars(vars);
     }
 }
 

@@ -89,6 +89,8 @@ int main(int argc, const char * argv[])
             clauseList = iterator->second;
         }
         
+        head->fillUnboundVars();
+        
         clauseList->push_back(clause);
         
     }

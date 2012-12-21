@@ -12,6 +12,7 @@
 #include <iostream>
 #include <map>
 #include <z3.h>
+#include <set>
 
 using namespace std;
 
@@ -29,7 +30,9 @@ public:
     
     SubExpression(string expr);
     
-    Z3_ast getAst(Z3_context context, map<string, int> *mapping, map<string, string>*);
+    Z3_ast getAst(Z3_context context, map<string, string> *mapping, map<string, string>*);
+    
+    void collectVars(set<string> *vars);
     
 };
 

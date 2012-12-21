@@ -17,7 +17,7 @@ public:
     int k;
     Clause *clause;
     Head* head;
-    map<string, int> *mapping;
+    map<string, string> *mapping;
 };
 
 Head::Head(string headStr, Clause *cls) {
@@ -58,7 +58,7 @@ string Head::toString() {
 /*
  * Called from recursive expandHead
  */
-void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Clause*>*> *clauses, map<string, int> *mapping,
+void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Clause*>*> *clauses, map<string, string> *mapping,
                   map<int, pair<Clause*, int>> *callStack) {
     
     std::cout << "Expanding h" << clause->head->identifier << std::endl;
@@ -121,7 +121,7 @@ Checkpoint* popCheckpoint(list<Checkpoint*> *heads, map<int, pair<Clause *, int>
 /*
  * Called by init
  */
-void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*>*> *clauses, map<string, int> *mapping,
+void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*>*> *clauses, map<string, string> *mapping,
                 map<int, pair<Clause*, int>> *callStack) {
     
     list<Checkpoint*> *checkpoints = new list<Checkpoint*>();
@@ -226,7 +226,7 @@ void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*
                 
                 Z3_push(context);
                 
-                map<string, int> *newMapping = new map<string, int>(*mapping);
+                map<string, string> *newMapping = new map<string, string>(*mapping);
                 
                 // NOTE: Assume only one formula
                 nextHead = clause->formulas->front();
@@ -274,12 +274,12 @@ void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*
  */
 void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> *clauses) {
     
-    map<string, int> *mapping = new map<string, int>();
+    map<string, string> *mapping = new map<string, string>();
     
     map<int, pair<Clause*, int>> *callStack = new map<int, pair<Clause*, int>>();
     
     for(string variable : this->vars) {
-        mapping->insert(pair<string, int>(variable, 0));
+        mapping->insert(pair<string, string>(variable, variable));
     }
     
     expandHeads(this, context, clauses, mapping, callStack);
@@ -337,4 +337,38 @@ void Head::fillRecursionState(unordered_map<int, list<Clause*>*> *clauses, set<i
     }
     
     
+}
+
+void Head::collectVars(set<string> *vars) {
+    for(auto it = this->vars.begin(); it != this->vars.end(); it++) {
+        vars->insert((*it));
+    }
+}
+
+void Head::fillUnboundVars() {
+    
+    if(this->identifier == 0)
+        return;
+    
+    this->clause->unboundVars = new set<string>();
+    
+    set<string> *allVars = new set<string>();
+    
+    for(Head* formula : (*(clause->formulas))) {
+        formula->collectVars(allVars);
+    }
+    
+    for(BoolExpression* expression : (*(clause->expressions))) {
+        if(expression->collectVars(allVars)) {
+            clause->endClause = true;
+            return;
+        }
+    }
+
+    for(auto it = allVars->begin(); it != allVars->end(); it++) {
+        if(std::find(vars.begin(), vars.end(), (*it)) == vars.end()) {
+            std::cout << "In clause " << this->identifier << ", " << (*it) << " is unbound!" << std::endl;
+            this->clause->unboundVars->insert((*it));
+        }
+    }
 }

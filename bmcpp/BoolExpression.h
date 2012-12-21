@@ -27,7 +27,9 @@ public:
     
     BoolExpression(string expr);
         
-    Z3_ast getAst(Z3_context context, map<string, int> *mapping, map<string, string>*);
+    Z3_ast getAst(Z3_context context, map<string, string> *mapping, map<string, string>*);
+    
+    bool collectVars(set<string> *vars);
     
 };
 

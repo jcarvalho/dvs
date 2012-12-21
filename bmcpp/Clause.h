@@ -35,11 +35,15 @@ public:
     list<BoolExpression*> *expressions;
     
     list<Head*> *formulas;
-        
+    
+    set<string> *unboundVars;
+    
+    bool endClause = false;
+    
     Clause();
     
     ~Clause();
-    
+
 };
 
 #endif /* defined(__bmcpp__Clause__) */

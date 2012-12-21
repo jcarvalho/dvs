@@ -11,6 +11,8 @@
 
 using namespace std;
 
+static int varGenerator = 0;
+
 std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
     std::stringstream ss(s);
     std::string item;
@@ -43,7 +45,7 @@ void assertIt(Z3_context context, Z3_ast ast) {
     Z3_assert_cnstr(context, ast);
 }
 
-void debugMapping(std::map<string, int> *mapping) {
+void debugMapping(std::map<string, string> *mapping) {
     
     std::stringstream ss(stringstream::out);
     
@@ -57,4 +59,10 @@ void debugMapping(std::map<string, int> *mapping) {
 
     std::cout << ss.str() << std::endl;
     
+}
+
+string genNewVar(string inputVar) {
+    varGenerator++;
+    std::cout << "Generating " << inputVar << " as " << varGenerator << std::endl;
+    return std::to_string(varGenerator);
 }

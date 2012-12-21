@@ -32,21 +32,14 @@ BoolExpression::BoolExpression(string expr) {
     this->rightOperand = new SubExpression(rightExpr);
 }
 
-Z3_ast BoolExpression::getAst(Z3_context context, map<string, int> *mapping, map<string, string> *newVars) {
+Z3_ast BoolExpression::getAst(Z3_context context, map<string, string> *mapping, map<string, string> *newVars) {
     
     Z3_ast left = this->leftOperand->getAst(context, mapping, newVars);
+    Z3_ast right = this->rightOperand->getAst(context, mapping, newVars);
 
     if(this->operatorCode == "=") {
-        
-        string varToUpdate = (*newVars)[this->leftOperand->value];
-        
-        (*mapping)[varToUpdate]++;
-        
-        Z3_ast right = this->rightOperand->getAst(context, mapping, newVars);
         return Z3_mk_eq(context, left, right);
     }
-    
-    Z3_ast right = this->rightOperand->getAst(context, mapping, newVars);
     
     if(this->operatorCode == "<") {
         return Z3_mk_lt(context, left, right);
@@ -67,4 +60,16 @@ Z3_ast BoolExpression::getAst(Z3_context context, map<string, int> *mapping, map
     std::cerr << "Error, cannot generate AST for expression! Unknown Operator: " << this->operatorCode << std::endl;
     exit(-1);
     
+}
+
+
+bool BoolExpression::collectVars(set<string> *vars) {
+    
+    if(this->operatorCode == "=" && this->leftOperand->value == "1" && this->rightOperand->value == "1")
+        return true;
+    
+    this->leftOperand->collectVars(vars);
+    this->rightOperand->collectVars(vars);
+    
+    return false;
 }

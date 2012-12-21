@@ -38,6 +38,10 @@ public:
     
     void fillRecursionState(unordered_map<int, list<Clause*>*> *clauses, set<int>&);
     
+    void collectVars(set<string> *vars);
+    
+    void fillUnboundVars();
+    
 };
 
 #endif /* defined(__bmcpp__Head__) */

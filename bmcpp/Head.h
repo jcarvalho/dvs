@@ -34,7 +34,7 @@ public:
     
     string toString();
 
-    void expandHead(Z3_context context, unordered_map<int, list<Clause*>*> *clauses);
+    void expandHead(Z3_context context, int K_MAX, unordered_map<int, list<Clause*>*> *clauses);
     
     void fillRecursionState(unordered_map<int, list<Clause*>*> *clauses, set<int>&);
     

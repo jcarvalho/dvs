@@ -40,8 +40,8 @@ void replaceAll(std::string& str, const std::string& from, const std::string& to
 int main(int argc, const char * argv[])
 {
     
-    if(argc < 2) {
-        std::cerr << "Usage bmc <filename>";
+    if(argc < 3) {
+        std::cerr << "Usage bmc <filename> <k>" << std::endl;
         exit(-1);
     }
     
@@ -150,7 +150,7 @@ int main(int argc, const char * argv[])
     
     for ( auto local_it = falseClauses->begin(); local_it!= falseClauses->end(); ++local_it ) {
         
-        (*local_it)->formulas->front()->expandHead(context, clauses);
+        (*local_it)->formulas->front()->expandHead(context, atoi(argv[2]), clauses);
     }
     
     delete clauses;

@@ -128,7 +128,7 @@ Checkpoint* popCheckpoint(list<Checkpoint*> *heads, map<int, pair<Clause *, int>
 /*
  * Called by init
  */
-void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*>*> *clauses, map<string, string> *mapping,
+void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, list<Clause*>*> *clauses, map<string, string> *mapping,
                  map<int, pair<Clause*, int>> *callStack) {
     
     int pendings = 0;
@@ -369,7 +369,7 @@ void expandHeads(Head* head, Z3_context context, unordered_map<int, list<Clause*
 /*
  * Called from main
  */
-void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> *clauses) {
+void Head::expandHead(Z3_context context, int K_MAX, unordered_map<int, list<Clause*>*> *clauses) {
     
     map<string, string> *mapping = new map<string, string>();
     
@@ -379,7 +379,7 @@ void Head::expandHead(Z3_context context, unordered_map<int, list<Clause*>*> *cl
         mapping->insert(pair<string, string>(variable, variable));
     }
     
-    expandHeads(this, context, clauses, mapping, callStack);
+    expandHeads(this, context, K_MAX, clauses, mapping, callStack);
     
     delete callStack;
     delete mapping;

@@ -203,13 +203,14 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                     if(cp == NULL)
                         break;
                     
-                    delete mapping;
-                    Z3_pop(context, 1);
                     
-                    if(!cp->isPending)
+                    if(!cp->isPending) {
+                        delete mapping;
+                        Z3_pop(context, 1);
                         mapping = cp->mapping;
-                    else
+                    } else {
                         pendings--;
+                    }
                     
                     nextHead = cp->head;
                     
@@ -294,10 +295,13 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                         break;
                     }
                     
-                    if(!cp->isPending)
+                    if(!cp->isPending) {
+                        delete mapping;
+                        Z3_pop(context, 1);
                         mapping = cp->mapping;
-                    else
+                    } else {
                         pendings--;
+                    }
                     
                     nextHead = cp->head;
                     
@@ -333,10 +337,13 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                     break;
                 }
                 
-                if(!cp->isPending)
+                if(!cp->isPending) {
+                    delete mapping;
+                    Z3_pop(context, 1);
                     mapping = cp->mapping;
-                else
+                } else {
                     pendings--;
+                }
                 
                 nextHead = cp->head;
                 
@@ -363,6 +370,9 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
             }
         }
     }
+
+    delete mapping;
+    delete callStack;
     
 }
 
@@ -380,9 +390,6 @@ void Head::expandHead(Z3_context context, int K_MAX, unordered_map<int, list<Cla
     }
     
     expandHeads(this, context, K_MAX, clauses, mapping, callStack);
-    
-    delete callStack;
-    delete mapping;
 }
 
 void Head::fillRecursionState(unordered_map<int, list<Clause*>*> *clauses, set<int> &calls) {

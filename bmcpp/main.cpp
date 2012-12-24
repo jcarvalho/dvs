@@ -72,15 +72,19 @@ int main(int argc, const char * argv[])
         Head *head = new Head(tokens[0], clause);
         
         clause->head = head;
-        
+         
+        // Not all formulas can be split with ' '. Sometimes they are next to each other
+        // Ex: SG3 h2(A,B,C,D,A,B,C,D) :- B=3,A=5, h1(E,F).
         for(int i = 2; i < tokens.size(); i++) {
             string item = tokens[i];
             if(item.c_str()[0] == 'h') {
-                clause->formulas->push_back(new Head(tokens[i], clause));
+                clause->formulas->push_back(new Head(item, clause));
             } else {
-                BoolExpression *expression = new BoolExpression(tokens[i]);
-                clause->expressions->push_back(expression);
-                // std::cout << "AST: " << Z3_ast_to_string(context, expression->getAst(context)) << std::endl;
+                vector<string> subtokens = split(item, ',');
+                for (int k = 0; k < subtokens.size(); k++) {
+                    BoolExpression *expression = new BoolExpression(subtokens[k]);
+                    clause->expressions->push_back(expression);
+                }
             }
         }
         

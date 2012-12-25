@@ -27,7 +27,8 @@ public:
     map<string, string> *mapping;
     set<int> *alreadySeen;
     map<int, pair<Clause*, int>> *callStack;
-}
+    list<Checkpoint*>* checkpoints;
+};
 
 Head::Head(string headStr, Clause *cls) {
     
@@ -72,12 +73,6 @@ void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Cl
     
     std::cout << "Expanding h" << clause->head->identifier << std::endl;
     
-    // Update mapping
-    
-    for(string varToCreate : (*(clause->unboundVars))) {
-        (*mapping)[varToCreate] = genNewVar(varToCreate);
-    }
-    
     debugMapping(mapping);
     
     std::cout << "{--";
@@ -105,6 +100,11 @@ void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Cl
         }
     }
     delete backupMapping;
+
+    // Update mapping
+    for(string varToCreate : (*(clause->unboundVars))) {
+        (*mapping)[varToCreate] = genNewVar(varToCreate);
+    }
     
     debugMapping(mapping);
     
@@ -139,12 +139,12 @@ Checkpoint* popCheckpoint(list<Checkpoint*> *heads, map<int, pair<Clause *, int>
     while(heads->size() != 0) {
         cp = heads->front();
         heads->pop_front();
-        if(!cp->isCycle || cp->isPending) {
+        if(!cp->isCycle) {
             return cp;
         }
                 
         (*callStack)[cp->identifier] = pair<Clause*, int>(cp->clause, cp->k);
-        delete cp;
+        // delete cp;
     }
     
     return NULL;
@@ -160,6 +160,13 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
     
     list<Checkpoint*> *checkpoints = new list<Checkpoint*>();
 
+    // We need to detach branch checkpoints from the rest. The idea is that we want to 
+    // explore all pending before reverting to another branch. Additionally, the branch 
+    // will need to explore pendings that were discovered before the branch was discovered
+    // but that were left pending. Because of that, we need to also keep in the BranchCheckpoint
+    // the checkpoints that existed at the time the branch was created.
+    list<BranchCheckpoint*> *branches = new list<BranchCheckpoint*>();
+
     // It is possible that a "right" head expands into a cycle. SG3 is a good example 
     // of that with hte h16->h3 expansion. This is one of the two expansions of h16 and 
     // thus is not caught as a Cycle (which is actually not, even though it does form 
@@ -167,37 +174,52 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
     // cycle, we do not expand it.
     set<int> *alreadyEnqueuedInCurrentCheckpoint = new set<int>();
     
+    list<Checkpoint*> *toCollect = new list<Checkpoint*>();
+
     // Right head
     Head *nextHead = head;
     
     while(1) {
+        // Here at the start we deal with expansions that lead to nodes where we have already been in this branch/iteration
+        // These happen due to cycles in multiple-formula expansion in the same clause
         if (alreadyEnqueuedInCurrentCheckpoint->find(nextHead->identifier) == alreadyEnqueuedInCurrentCheckpoint->end()) {
             alreadyEnqueuedInCurrentCheckpoint->insert(nextHead->identifier);
         } else {
-            pendings--;
-
             Checkpoint *cp = popCheckpoint(checkpoints, callStack);
-            if(cp == NULL)
-                break;
-                    
-            if(!cp->isPending) {
-                std::cout << "Calling Z3...at start" << std::endl;
-                Z3_model model2;
-                if(Z3_check_and_get_model(context, &model2) == Z3_L_TRUE) {
-                    printf("Program is not correct! Model:\n%s", Z3_model_to_string(context, model2));
-                    exit(-1);
-                }
+            if(cp == NULL) {
+                if(branches->size() > 0) {
+                    // it is a branch checkpoint
+                    BranchCheckpoint* bc = branches->front();
+                    branches->pop_front();
+                
+                    std::cout << "Calling Z3...at start" << std::endl;
+                    Z3_model model2;
+                    if(Z3_check_and_get_model(context, &model2) == Z3_L_TRUE) {
+                        printf("Program is not correct! Model:\n%s", Z3_model_to_string(context, model2));
+                        exit(-1);
+                    }
 
-                delete mapping;
-                delete alreadyEnqueuedInCurrentCheckpoint;
-                Z3_pop(context, 1);
-                mapping = cp->mapping;
-                alreadyEnqueuedInCurrentCheckpoint = cp->alreadySeen;
+                    delete mapping;
+                    delete alreadyEnqueuedInCurrentCheckpoint;
+                    delete callStack;
+                    delete checkpoints;
+                    Z3_pop(context, 1);
+                    mapping = bc->mapping;
+                    alreadyEnqueuedInCurrentCheckpoint = bc->alreadySeen;
+                    callStack = bc->callStack;
+                    checkpoints = bc->checkpoints;
+                    nextHead = bc->head;
+                } else {
+                    // we're done here
+                    break;
+                }
             } else {
+                // it is a pending checkpoint
                 pendings--;
+                // delete cp;
+                nextHead = cp->head;
             }
                     
-            nextHead = cp->head;
                     
             continue;
         }
@@ -265,22 +287,33 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                 
                 if(toExpand->endClause) {
                     Checkpoint *cp = popCheckpoint(checkpoints, callStack);
-                    if(cp == NULL)
-                        break;
-                    
-                    
-                    if(!cp->isPending) {
-                        delete mapping;
-                        delete alreadyEnqueuedInCurrentCheckpoint;
-                        Z3_pop(context, 1);
-                        mapping = cp->mapping;
-                        alreadyEnqueuedInCurrentCheckpoint = cp->alreadySeen;
+                    if(cp == NULL) {
+                        if(branches->size() > 0) {
+                            // it is a branch checkpoint
+                            BranchCheckpoint* bc = branches->front();
+                            branches->pop_front();
+                            delete mapping;
+                            delete alreadyEnqueuedInCurrentCheckpoint;
+                            delete callStack;
+                            delete checkpoints;
+                            Z3_pop(context, 1);
+                            mapping = bc->mapping;
+                            alreadyEnqueuedInCurrentCheckpoint = bc->alreadySeen;
+                            callStack = bc->callStack;
+                            checkpoints = bc->checkpoints;
+                            nextHead = bc->head;
+                        } else {
+                            // we're done here
+                            break;
+                        }
                     } else {
+                        // it is a pending checkpoint
                         pendings--;
+                        // delete cp;
+                        nextHead = cp->head;
                     }
-                    
-                    nextHead = cp->head;
-                    
+                            
+                            
                     continue;
                 }
                 
@@ -288,6 +321,7 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                 
                 if(toExpand->recursionState == CYCLE && ks.second > 0) {
                     Checkpoint *cp = new Checkpoint();
+                    toCollect->push_front(cp);
                     cp->isCycle = true;
                     cp->identifier = nextHead->identifier;
                     cp->clause = toExpand;
@@ -300,7 +334,8 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                 // Note that it SHOULD be the "function" call head
                 for(Head* head : (*(toExpand->formulas))) {
                     Checkpoint *cp = new Checkpoint();
-                    cp->isPending = true;
+                    toCollect->push_front(cp);
+                    cp->isCycle = false;
                     cp->head = head;
                     checkpoints->push_front(cp);
                     pendings++;
@@ -312,39 +347,38 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                 checkpoints->pop_front();
                 pendings--;
                 
-                delete cp;
+                // delete cp;
                 
             } else {
-                
-                // NOTE: Assume two clauses only
                 
                 auto it = clauseList->begin();
                 
                 Clause *clause = *it;
-		std:cout << " branch clause " << clause->head->identifier << " is end? " << clause->endClause << " pendings: " << pendings << std::endl;
+		        std:cout << " branch clause " << clause->head->identifier << " is end? " << clause->endClause << " pendings: " << pendings << std::endl;
 
                 while(it != clauseList->end() && clause->endClause && pendings != 0) {
                     clause = *(++it);
-		    cout << " branch clause " << clause->head->identifier << " is end? " << clause->endClause << " pendings: " << pendings << std::endl;
+                    if (it != clauseList->end()) {
+		                cout << " branch clause " << clause->head->identifier << " is end? " << clause->endClause << " pendings: " << pendings << std::endl;
+                    }
                 }
                 
                 Z3_push(context);
                 
-                map<string, string> *newMapping = new map<string, string>(*mapping);
+                map<string, string> *backupMapping = new map<string, string>(*mapping);
                 
                 Checkpoint *cp;
                 
                 if(it != clauseList->end() && (!clause->endClause || (clause->endClause && pendings == 0))) {
-		    cout << "expanding one of the previous branch clauses" << endl;
-                    expandClause(clause, context, clauses, newMapping, callStack, pendings, nextHead->vars);
+		            cout << "expanding one of the previous branch clauses" << endl;
+                    expandClause(clause, context, clauses, mapping, callStack, pendings, nextHead->vars);
                     // Expand Last right head, and add the rest to the queue
                     // Note that it SHOULD be the "function" call head
                     for(Head* head : (*(clause->formulas))) {
                         Checkpoint *cp = new Checkpoint();
-                        cp->isPending = true;
+                        toCollect->push_front(cp);
+                        cp->isCycle = false;
                         cp->head = head;
-                        cp->alreadySeen = alreadyEnqueuedInCurrentCheckpoint;
-                        alreadyEnqueuedInCurrentCheckpoint = new set<int>(*alreadyEnqueuedInCurrentCheckpoint);
                         checkpoints->push_front(cp);
                         pendings++;
                     }
@@ -355,49 +389,64 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                     checkpoints->pop_front();
                     pendings--;
                     
-                    delete cp;
+                    // delete cp;
                 } 
 
-		if(it == clauseList->end() || (clause->endClause && pendings != 0)) {
+		        if(it == clauseList->end() || (clause->endClause && pendings != 0)) {
                     Checkpoint *cp = popCheckpoint(checkpoints, callStack);
                     if(cp == NULL) {
-                        break;
-                    }
-                    
-                    if(!cp->isPending) {
-                        delete mapping;
-                        delete alreadyEnqueuedInCurrentCheckpoint;
-                        Z3_pop(context, 1);
-                        mapping = cp->mapping;
-                        alreadyEnqueuedInCurrentCheckpoint = cp->alreadySeen;
+                        if(branches->size() > 0) {
+                            // it is a branch checkpoint
+                            BranchCheckpoint* bc = branches->front();
+                            branches->pop_front();
+                            delete mapping;
+                            delete alreadyEnqueuedInCurrentCheckpoint;
+                            delete callStack;
+                            delete checkpoints;
+                            Z3_pop(context, 1);
+                            mapping = bc->mapping;
+                            alreadyEnqueuedInCurrentCheckpoint = bc->alreadySeen;
+                            callStack = bc->callStack;
+                            checkpoints = bc->checkpoints;
+                            nextHead = bc->head;
+                        } else {
+                            // we're done here
+                            delete backupMapping;
+                            break;
+                        }
                     } else {
+                        // it is a pending checkpoint
                         pendings--;
+                        // delete cp;
+                        nextHead = cp->head;
                     }
-                    
-                    nextHead = cp->head;
-                    
+                            
+                            
+                    delete backupMapping;
                     continue;
                 } else {
-		    ++it;
+		            ++it;
                     while(it != clauseList->end()) {
-                        cp = new Checkpoint();
+                        BranchCheckpoint* bc = new BranchCheckpoint();
                         
-                        cp->isCycle = false;
-                        cp->mapping = newMapping;
+                        bc->mapping = new map<string, string>(*backupMapping);
                         
                         // TODO: There could be more than one!
                         // Moreover, we are skipping the "duplicate" clause expansion, at this moment we 
                         // are only expanding it once and then we checkpoint the first right head of each of the "duplicates" clauses
                         // both these are problematic in evenodd.c
-                        cp->head = (*(it))->formulas->front();
-                        cp->alreadySeen = alreadyEnqueuedInCurrentCheckpoint;
+                        bc->head = (*(it))->formulas->front();
+                        bc->alreadySeen = alreadyEnqueuedInCurrentCheckpoint;
                         alreadyEnqueuedInCurrentCheckpoint = new set<int>(*alreadyEnqueuedInCurrentCheckpoint);                        
+                        bc->callStack = new map<int, pair<Clause*, int>>(*callStack);
+                        bc->checkpoints = new list<Checkpoint*>(*checkpoints);
 
-                        checkpoints->push_front(cp);
-			it++;
+                        branches->push_front(bc);
+            			it++;
 
-		        cout << "added the other branches of " << cp->head->identifier << " as branch checkpoint" << endl;
+		                cout << "added the other branches of " << bc->head->identifier << " as branch checkpoint" << endl;
                     }
+                    delete backupMapping;
                 }
             }
             
@@ -410,22 +459,32 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
             if(nextClause->endClause) {
                 Checkpoint *cp = popCheckpoint(checkpoints, callStack);
                 if(cp == NULL) {
-                    std::cout << "This false is taken care of." << std::endl;
-                    break;
-                }
-                
-                if(!cp->isPending) {
-                    delete mapping;
-                    delete alreadyEnqueuedInCurrentCheckpoint;
-                    Z3_pop(context, 1);
-                    mapping = cp->mapping;
-                    alreadyEnqueuedInCurrentCheckpoint = cp->alreadySeen;
+                    if(branches->size() > 0) {
+                        // it is a branch checkpoint
+                        BranchCheckpoint* bc = branches->front();
+                        branches->pop_front();
+                        delete mapping;
+                        delete alreadyEnqueuedInCurrentCheckpoint;
+                        delete callStack;
+                        delete checkpoints;
+                        Z3_pop(context, 1);
+                        mapping = bc->mapping;
+                        alreadyEnqueuedInCurrentCheckpoint = bc->alreadySeen;
+                        callStack = bc->callStack;
+                        checkpoints = bc->checkpoints;
+                        nextHead = bc->head;
+                    } else {
+                        // we're done here
+                        break;
+                    }
                 } else {
+                    // it is a pending checkpoint
                     pendings--;
+                    // delete cp;
+                    nextHead = cp->head;
                 }
-                
-                nextHead = cp->head;
-                
+                        
+                        
                 continue;
             } else {
                 
@@ -433,7 +492,8 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                 // Note that it SHOULD be the "function" call head
                 for(Head* head : (*(nextClause->formulas))) {
                     Checkpoint *cp = new Checkpoint();
-                    cp->isPending = true;
+                    toCollect->push_front(cp);
+                    cp->isCycle = false;
                     cp->head = head;
                     checkpoints->push_front(cp);
                     pendings++;
@@ -445,14 +505,20 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                 checkpoints->pop_front();
                 pendings--;
                 
-                delete cp;
+                // delete cp;
             }
         }
     }
 
     delete mapping;
     delete callStack;
-    
+    delete branches;
+    delete checkpoints;
+    delete alreadyEnqueuedInCurrentCheckpoint;
+    for (Checkpoint* c : (*toCollect)) {
+        delete c;
+    }
+    delete toCollect;
 }
 
 /*

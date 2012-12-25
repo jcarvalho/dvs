@@ -61,7 +61,7 @@ int main(int argc, const char * argv[])
     while (getline(infile, line))
     {
         i++;
-	replaceAll(line, " -", "0-");
+	    replaceAll(line, " -", "0-");
         
         vector<string> tokens = split(line, ' ');
         
@@ -155,6 +155,18 @@ int main(int argc, const char * argv[])
     for ( auto local_it = falseClauses->begin(); local_it!= falseClauses->end(); ++local_it ) {
         
         (*local_it)->formulas->front()->expandHead(context, atoi(argv[2]), clauses);
+    }
+
+    for ( auto local_it = clauses->begin(); local_it != clauses->end(); local_it++) {
+        list<Clause*> *list = (*local_it).second;
+        for (Clause* c : (*list)) {
+            delete c->head;
+            for (Head* h: (*(c->formulas))) {
+                delete h;
+            }
+            delete c;
+        }
+        delete list;
     }
     
     delete clauses;

@@ -91,8 +91,15 @@ void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Cl
     // list of variables in h2 has repeating identifiers. So we ignore the repeated ones. There
     // is no guarantee this is the correct way to handle it though...
     set<string> *alreadySeen = new set<string>();
-    for(int i = ((int) calleeVars.size()) - 1; i >= 0; i--) {
+//    for(int i = ((int) calleeVars.size()) - 1; i >= 0; i--) {
+    for(int i = 0; i < calleeVars.size(); i++) {
         if (alreadySeen->find(clause->head->vars[i]) != alreadySeen->end()) {
+            if(!clause->endClause) {
+                Z3_ast eq = mk_eq_vars(context, (*mapping)[clause->head->vars[i]].c_str(), (*mapping)[calleeVars[i]].c_str());
+                
+                assertIt(context, eq);
+            }
+            
             continue; // we reached a repeated variable
         }
         alreadySeen->insert(clause->head->vars[i]);
@@ -134,7 +141,9 @@ void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Cl
         
         if(Z3_check_and_get_model(context, &model2) == Z3_L_TRUE) {
             std::cout << "Incorrect" << std::endl;
-            // printf("Program is not correct! Model:\n%s", Z3_model_to_string(context, model2));
+#ifdef NDEBUG
+            printf("Program is not correct! Model:\n%s", Z3_model_to_string(context, model2));
+#endif
             exit(-1);
         }
         
@@ -208,7 +217,9 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                     Z3_model model2;
                     if(Z3_check_and_get_model(context, &model2) == Z3_L_TRUE) {
                         std::cout << "Incorrect" << std::endl;
-                        // printf("Program is not correct! Model:\n%s", Z3_model_to_string(context, model2));
+#ifdef NDEBUG
+                        printf("Program is not correct! Model:\n%s", Z3_model_to_string(context, model2));
+#endif
                         exit(-1);
                     }
                     
@@ -562,7 +573,7 @@ void Head::expandHead(Z3_context context, int K_MAX, unordered_map<int, list<Cla
 }
 
 void Head::fillRecursionState(unordered_map<int, list<Clause*>*> *clauses, set<int> &calls) {
-
+    
 #ifdef NDEBUG
     std::cout << "Begin: " << this->identifier << std::endl;
 #endif
@@ -580,7 +591,7 @@ void Head::fillRecursionState(unordered_map<int, list<Clause*>*> *clauses, set<i
     if(setContains) {
 #ifdef NDEBUG
         std::cout << "Setting " << this->identifier << " as CYCLE " << this->clause << std::endl;
-#endif 
+#endif
         this->clause->recursionState = CYCLE;
         // std::cout << "Erasing: " << this->identifier << " " << this->clause << std::endl;
         calls.erase(this->identifier);

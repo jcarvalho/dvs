@@ -71,3 +71,16 @@ string genNewVar(string inputVar) {
 
     return ss.str();
 }
+
+Z3_ast mk_eq_vars(Z3_context context, string one, string other) {
+    
+    stringstream ss_one, ss_other;
+    
+    ss_one << '"' << one << '"';
+    ss_other << '"' << other << '"';
+    
+    Z3_ast one_ast = mk_str_var(context, ss_one.str().c_str());
+    Z3_ast other_ast = mk_str_var(context, ss_other.str().c_str());
+
+    return Z3_mk_eq(context, one_ast, other_ast);
+}

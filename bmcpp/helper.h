@@ -9,6 +9,8 @@
 #ifndef __bmcpp__split__
 #define __bmcpp__split__
 
+// #define NDEBUG
+
 #include <iostream>
 #include <vector>
 #include <z3.h>
@@ -26,6 +28,6 @@ void assertIt(Z3_context context, Z3_ast ast);
 
 void debugMapping(map<string, string> *mapping);
 
-string genNewVar(string inputVar);
-
+string genNewVar(string inputVar);        
+        
 #endif /* defined(__bmcpp__split__) */

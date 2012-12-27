@@ -37,6 +37,12 @@ void replaceAll(std::string& str, const std::string& from, const std::string& to
     }
 }
 
+int correct() {
+    std::cout << "Correct" << std::endl;
+    
+    return 0;
+}
+
 int main(int argc, const char * argv[])
 {
     
@@ -105,7 +111,9 @@ int main(int argc, const char * argv[])
         
     }
     
+#ifdef NDEBUG
     std::cout << "Parsing done, now expanding..." << std::endl;
+#endif
     
     std::list<Clause *> *falseClauses = clauses->find(0)->second;
     
@@ -136,15 +144,23 @@ int main(int argc, const char * argv[])
             list<Clause *> *headClauses = (*clauses)[headToExpand->identifier];
             
             if(cycleToExpand == getCycleClause(headClauses, CYCLE)) {
+#ifdef NDEBUG
                 std::cout << "Clause " << cycleToExpand->head->identifier << " @ " << cycleToExpand << " is actually a cycle!" << std::endl;
                 std::cout << "--> " << cycleToExpand->formulas->front()->identifier << std::endl;
+#endif
                 break;
             }
             
             iter = getCycleClause(headClauses, NOT_CYCLE);
             
+            if(iter == NULL) {
+                return correct();
+            }
+            
             if(iter->formulas->size() == 0) {
+#ifdef NDEBUG
                 std::cout << "Clause " << cycleToExpand->head->identifier << " @ " << cycleToExpand << " was not a cycle after all!" << std::endl;
+#endif
                 cycleToExpand->recursionState = NOT_CYCLE;
                 break;
             }
@@ -171,8 +187,6 @@ int main(int argc, const char * argv[])
     
     delete clauses;
     
-    std::cout << "Congratulations, your program is correct!" << std::endl;
-    
-    return 0;
+    return correct();
 }
 

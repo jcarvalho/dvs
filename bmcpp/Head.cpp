@@ -71,6 +71,7 @@ string Head::toString() {
 void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Clause*>*> *clauses, map<string, string> *mapping,
                   map<int, pair<Clause*, int>> *callStack, int nPendings, vector<string> calleeVars) {
     
+#ifdef NDEBUG
     std::cout << "Expanding h" << clause->head->identifier << std::endl;
     
     debugMapping(mapping);
@@ -80,33 +81,36 @@ void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Cl
         std::cout << str << " ";
     }
     std::cout << "--}" << std::endl;
+#endif
     
-    // We always need to update the new mapping from the old one, so that we do not make 
+    // We always need to update the new mapping from the old one, so that we do not make
     // updates that are influenced by new updates. Look into h14 -> h13 in SG3 for an example
     map<string, string> *backupMapping = new map<string, string>(*mapping);
-
-    // Clauses such as h2(A,B,C,D,A,B,C,D) :- B=3,A=5, h1(E,F). are problematic. Note that the 
-    // list of variables in h2 has repeating identifiers. So we ignore the repeated ones. There 
+    
+    // Clauses such as h2(A,B,C,D,A,B,C,D) :- B=3,A=5, h1(E,F). are problematic. Note that the
+    // list of variables in h2 has repeating identifiers. So we ignore the repeated ones. There
     // is no guarantee this is the correct way to handle it though...
     set<string> *alreadySeen = new set<string>();
-    for(int i = 0; i < calleeVars.size(); i++) {
+    for(int i = ((int) calleeVars.size()) - 1; i >= 0; i--) {
         if (alreadySeen->find(clause->head->vars[i]) != alreadySeen->end()) {
             continue; // we reached a repeated variable
-        } 
+        }
         alreadySeen->insert(clause->head->vars[i]);
-
+        
         if(clause->head->vars[i] != calleeVars[i]) {
             (*mapping)[clause->head->vars[i]] = (*backupMapping)[calleeVars[i]];
         }
     }
     delete backupMapping;
-
+    
     // Update mapping
     for(string varToCreate : (*(clause->unboundVars))) {
         (*mapping)[varToCreate] = genNewVar(varToCreate);
     }
     
+#ifdef NDEBUG
     debugMapping(mapping);
+#endif
     
     for(BoolExpression* expression : *(clause->expressions)) {
         assertIt(context, expression->getAst(context, mapping));
@@ -114,35 +118,40 @@ void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Cl
     
     // Check if we're not in the and case
     
-if (clause->endClause) {
-    std::cout << "CALL Z3? " << nPendings << std::endl;
-}
-
+    if (clause->endClause) {
+#ifdef NDEBUG
+        std::cout << "CALL Z3? " << nPendings << std::endl;
+#endif
+    }
+    
     if(clause->endClause && nPendings == 0) {
-
+        
+#ifdef NDEBUG
         std::cout << "Calling Z3..." << std::endl;
+#endif
         
         Z3_model model2;
         
         if(Z3_check_and_get_model(context, &model2) == Z3_L_TRUE) {
-            printf("Program is not correct! Model:\n%s", Z3_model_to_string(context, model2));
+            std::cout << "Incorrect" << std::endl;
+            // printf("Program is not correct! Model:\n%s", Z3_model_to_string(context, model2));
             exit(-1);
         }
         
-    } 
+    }
 }
 
 Checkpoint* popCheckpoint(list<Checkpoint*> *heads, map<int, pair<Clause *, int>> *callStack) {
     
     Checkpoint *cp = NULL;
-        
+    
     while(heads->size() != 0) {
         cp = heads->front();
         heads->pop_front();
         if(!cp->isCycle) {
             return cp;
         }
-                
+        
         (*callStack)[cp->identifier] = pair<Clause*, int>(cp->clause, cp->k);
         // delete cp;
     }
@@ -159,23 +168,23 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
     int pendings = 0;
     
     list<Checkpoint*> *checkpoints = new list<Checkpoint*>();
-
-    // We need to detach branch checkpoints from the rest. The idea is that we want to 
-    // explore all pending before reverting to another branch. Additionally, the branch 
+    
+    // We need to detach branch checkpoints from the rest. The idea is that we want to
+    // explore all pending before reverting to another branch. Additionally, the branch
     // will need to explore pendings that were discovered before the branch was discovered
     // but that were left pending. Because of that, we need to also keep in the BranchCheckpoint
     // the checkpoints that existed at the time the branch was created.
     list<BranchCheckpoint*> *branches = new list<BranchCheckpoint*>();
-
-    // It is possible that a "right" head expands into a cycle. SG3 is a good example 
-    // of that with hte h16->h3 expansion. This is one of the two expansions of h16 and 
-    // thus is not caught as a Cycle (which is actually not, even though it does form 
-    // one in the graph. If we find a pending head that was already expanded in the current 
+    
+    // It is possible that a "right" head expands into a cycle. SG3 is a good example
+    // of that with hte h16->h3 expansion. This is one of the two expansions of h16 and
+    // thus is not caught as a Cycle (which is actually not, even though it does form
+    // one in the graph. If we find a pending head that was already expanded in the current
     // cycle, we do not expand it.
     set<int> *alreadyEnqueuedInCurrentCheckpoint = new set<int>();
     
     list<Checkpoint*> *toCollect = new list<Checkpoint*>();
-
+    
     // Right head
     Head *nextHead = head;
     
@@ -191,14 +200,18 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                     // it is a branch checkpoint
                     BranchCheckpoint* bc = branches->front();
                     branches->pop_front();
-                
+                    
+#ifdef NDEBUG
                     std::cout << "Calling Z3...at start" << std::endl;
+#endif
+                    
                     Z3_model model2;
                     if(Z3_check_and_get_model(context, &model2) == Z3_L_TRUE) {
-                        printf("Program is not correct! Model:\n%s", Z3_model_to_string(context, model2));
+                        std::cout << "Incorrect" << std::endl;
+                        // printf("Program is not correct! Model:\n%s", Z3_model_to_string(context, model2));
                         exit(-1);
                     }
-
+                    
                     delete mapping;
                     delete alreadyEnqueuedInCurrentCheckpoint;
                     delete callStack;
@@ -219,11 +232,11 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                 // delete cp;
                 nextHead = cp->head;
             }
-                    
-                    
+            
+            
             continue;
         }
-
+        
         list<Clause*>* clauseList = clauses->find(nextHead->identifier)->second;
         
         if(clauseList->size() != 1) {
@@ -254,7 +267,9 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                 
                 auto ks = (*callStack)[nextHead->identifier];
                 
+#ifdef NDEBUG
                 std::cout << "CallStack: " << ks.second << ". Cycle clause: " << cycleClause << std::endl;
+#endif
                 
                 Clause* toExpand = NULL;
                 
@@ -272,11 +287,13 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                 }
                 
                 if(toExpand == NULL) {
-                    std::cerr << "Solar flare detected!" << std::endl;
-                    exit(-2);
+                    std::cout << "Correct" << std::endl;
+                    exit(0);
                 }
                 
+#ifdef NDEBUG
                 std::cout << "Exploring LOOP branch of clause " << nextHead->identifier << std::endl;
+#endif
                 
                 if(toExpand->recursionState == CYCLE && ks.second > 0) {
                     (*callStack)[nextHead->identifier] = pair<Clause*, int>(toExpand, ks.second - 1);
@@ -312,8 +329,8 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                         // delete cp;
                         nextHead = cp->head;
                     }
-                            
-                            
+                    
+                    
                     continue;
                 }
                 
@@ -354,12 +371,16 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                 auto it = clauseList->begin();
                 
                 Clause *clause = *it;
-		        std:cout << " branch clause " << clause->head->identifier << " is end? " << clause->endClause << " pendings: " << pendings << std::endl;
-
+#ifdef NDEBUG
+            std:cout << " branch clause " << clause->head->identifier << " is end? " << clause->endClause << " pendings: " << pendings << std::endl;
+#endif
+                
                 while(it != clauseList->end() && clause->endClause && pendings != 0) {
                     clause = *(++it);
                     if (it != clauseList->end()) {
+#ifdef NDEBUG
 		                cout << " branch clause " << clause->head->identifier << " is end? " << clause->endClause << " pendings: " << pendings << std::endl;
+#endif
                     }
                 }
                 
@@ -370,7 +391,9 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                 Checkpoint *cp;
                 
                 if(it != clauseList->end() && (!clause->endClause || (clause->endClause && pendings == 0))) {
+#ifdef NDEBUG
 		            cout << "expanding one of the previous branch clauses" << endl;
+#endif
                     expandClause(clause, context, clauses, mapping, callStack, pendings, nextHead->vars);
                     // Expand Last right head, and add the rest to the queue
                     // Note that it SHOULD be the "function" call head
@@ -390,8 +413,8 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                     pendings--;
                     
                     // delete cp;
-                } 
-
+                }
+                
 		        if(it == clauseList->end() || (clause->endClause && pendings != 0)) {
                     Checkpoint *cp = popCheckpoint(checkpoints, callStack);
                     if(cp == NULL) {
@@ -420,8 +443,8 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                         // delete cp;
                         nextHead = cp->head;
                     }
-                            
-                            
+                    
+                    
                     delete backupMapping;
                     continue;
                 } else {
@@ -432,19 +455,20 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                         bc->mapping = new map<string, string>(*backupMapping);
                         
                         // TODO: There could be more than one!
-                        // Moreover, we are skipping the "duplicate" clause expansion, at this moment we 
+                        // Moreover, we are skipping the "duplicate" clause expansion, at this moment we
                         // are only expanding it once and then we checkpoint the first right head of each of the "duplicates" clauses
                         // both these are problematic in evenodd.c
                         bc->head = (*(it))->formulas->front();
                         bc->alreadySeen = alreadyEnqueuedInCurrentCheckpoint;
-                        alreadyEnqueuedInCurrentCheckpoint = new set<int>(*alreadyEnqueuedInCurrentCheckpoint);                        
+                        alreadyEnqueuedInCurrentCheckpoint = new set<int>(*alreadyEnqueuedInCurrentCheckpoint);
                         bc->callStack = new map<int, pair<Clause*, int>>(*callStack);
                         bc->checkpoints = new list<Checkpoint*>(*checkpoints);
-
+                        
                         branches->push_front(bc);
             			it++;
-
+#ifdef NDEBUG
 		                cout << "added the other branches of " << bc->head->identifier << " as branch checkpoint" << endl;
+#endif
                     }
                     delete backupMapping;
                 }
@@ -483,8 +507,8 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                     // delete cp;
                     nextHead = cp->head;
                 }
-                        
-                        
+                
+                
                 continue;
             } else {
                 
@@ -509,7 +533,7 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
             }
         }
     }
-
+    
     delete mapping;
     delete callStack;
     delete branches;
@@ -538,11 +562,15 @@ void Head::expandHead(Z3_context context, int K_MAX, unordered_map<int, list<Cla
 }
 
 void Head::fillRecursionState(unordered_map<int, list<Clause*>*> *clauses, set<int> &calls) {
-    
+
+#ifdef NDEBUG
     std::cout << "Begin: " << this->identifier << std::endl;
+#endif
     
     if(this->clause->recursionState != UNKNOWN) {
+#ifdef NDEBUG
         std::cout << "State known: " << (this->identifier) << " : " << this->clause << std::endl;
+#endif
         return;
     }
     
@@ -550,9 +578,11 @@ void Head::fillRecursionState(unordered_map<int, list<Clause*>*> *clauses, set<i
     bool isToInsert = false;
     
     if(setContains) {
+#ifdef NDEBUG
         std::cout << "Setting " << this->identifier << " as CYCLE " << this->clause << std::endl;
+#endif 
         this->clause->recursionState = CYCLE;
-        std::cout << "Erasing: " << this->identifier << " " << this->clause << std::endl;
+        // std::cout << "Erasing: " << this->identifier << " " << this->clause << std::endl;
         calls.erase(this->identifier);
         return;
     } else if(this->identifier != 0 && !setContains &&
@@ -567,19 +597,23 @@ void Head::fillRecursionState(unordered_map<int, list<Clause*>*> *clauses, set<i
         for(Clause *clause : *clauseList) {
             
             if(isToInsert) {
+#ifdef NDEBUG
                 std::cout << "Inserting: " << this->identifier << " " << this->clause << std::endl;
+#endif
                 calls.insert(this->identifier);
             }
             
             clause->head->fillRecursionState(clauses, calls);
             
             if(isToInsert) {
-                std::cout << "Erasing: " << this->identifier << " " << this->clause << std::endl;
+                // std::cout << "Erasing: " << this->identifier << " " << this->clause << std::endl;
                 calls.erase(this->identifier);
             }
             
             if(clause->recursionState == UNKNOWN) {
+#ifdef NDEBUG
                 std::cout << "Setting " << clause->head->identifier << " as NOT_CYCLE " << clause << std::endl;
+#endif
                 clause->recursionState = NOT_CYCLE;
             }
         }
@@ -616,7 +650,9 @@ void Head::fillUnboundVars() {
     
     for(auto it = allVars->begin(); it != allVars->end(); it++) {
         if(std::find(vars.begin(), vars.end(), (*it)) == vars.end()) {
+#ifdef NDEBUG
             std::cout << "In clause " << this->identifier << ", " << (*it) << " is unbound!" << std::endl;
+#endif
             this->clause->unboundVars->insert((*it));
         }
     }

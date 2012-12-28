@@ -90,19 +90,20 @@ void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Cl
     // Clauses such as h2(A,B,C,D,A,B,C,D) :- B=3,A=5, h1(E,F). are problematic. Note that the
     // list of variables in h2 has repeating identifiers. So we ignore the repeated ones. There
     // is no guarantee this is the correct way to handle it though...
-    set<string> *alreadySeen = new set<string>();
-//    for(int i = ((int) calleeVars.size()) - 1; i >= 0; i--) {
-    for(int i = 0; i < calleeVars.size(); i++) {
-        if (alreadySeen->find(clause->head->vars[i]) != alreadySeen->end()) {
+    map<string, int> *alreadySeen = new map<string, int>();
+    for(int i = ((int) calleeVars.size()) - 1; i >= 0; i--) {
+//    for(int i = 0; i < calleeVars.size(); i++) {
+        auto it = alreadySeen->find(clause->head->vars[i]);
+        if (it != alreadySeen->end()) {
             if(!clause->endClause) {
-                Z3_ast eq = mk_eq_vars(context, (*mapping)[clause->head->vars[i]].c_str(), (*mapping)[calleeVars[i]].c_str());
+                Z3_ast eq = mk_eq_vars(context, (*backupMapping)[clause->head->vars[i]].c_str(), (*backupMapping)[calleeVars[it->second]].c_str());
                 
                 assertIt(context, eq);
             }
             
             continue; // we reached a repeated variable
         }
-        alreadySeen->insert(clause->head->vars[i]);
+        (*alreadySeen)[clause->head->vars[i]] = i;
         
         if(clause->head->vars[i] != calleeVars[i]) {
             (*mapping)[clause->head->vars[i]] = (*backupMapping)[calleeVars[i]];
@@ -452,6 +453,7 @@ void expandHeads(Head* head, Z3_context context, int K_MAX, unordered_map<int, l
                         // it is a pending checkpoint
                         pendings--;
                         // delete cp;
+                        alreadyEnqueuedInCurrentCheckpoint->clear();
                         nextHead = cp->head;
                     }
                     

@@ -9,7 +9,7 @@
 #ifndef __bmcpp__split__
 #define __bmcpp__split__
 
-#define NDEBUG
+// #define NDEBUG
 
 #include <iostream>
 #include <vector>

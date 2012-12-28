@@ -1,0 +1,5 @@
+This project was written in C++ and requires a compiler compliant with C++11.
+We have tested it with GCC 4.7 and clang, both with support for C++11 enabled.
+An example script is provided to compile the project into a binary called 'bmc'.
+Note that this script has a path that <MUST> be replaced by the path to the 
+headers of Z3.

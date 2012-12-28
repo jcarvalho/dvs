@@ -87,6 +87,11 @@ void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Cl
     // updates that are influenced by new updates. Look into h14 -> h13 in SG3 for an example
     map<string, string> *backupMapping = new map<string, string>(*mapping);
     
+    // Update mapping
+    for(string varToCreate : (*(clause->unboundVars))) {
+        (*mapping)[varToCreate] = genNewVar(varToCreate);
+    }
+
     // Clauses such as h2(A,B,C,D,A,B,C,D) :- B=3,A=5, h1(E,F). are problematic. Note that the
     // list of variables in h2 has repeating identifiers. So we ignore the repeated ones. There
     // is no guarantee this is the correct way to handle it though...
@@ -95,11 +100,11 @@ void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Cl
 //    for(int i = 0; i < calleeVars.size(); i++) {
         auto it = alreadySeen->find(clause->head->vars[i]);
         if (it != alreadySeen->end()) {
-            if(!clause->endClause) {
-                Z3_ast eq = mk_eq_vars(context, (*backupMapping)[clause->head->vars[i]].c_str(), (*backupMapping)[calleeVars[it->second]].c_str());
+//            if(!clause->endClause) {
+//                Z3_ast eq = mk_eq_vars(context, (*mapping)[clause->head->vars[i]].c_str(), (*mapping)[calleeVars[it->second]].c_str());
                 
-                assertIt(context, eq);
-            }
+//                assertIt(context, eq);
+//            }
             
             continue; // we reached a repeated variable
         }
@@ -111,10 +116,6 @@ void expandClause(Clause *clause, Z3_context context, unordered_map<int, list<Cl
     }
     delete backupMapping;
     
-    // Update mapping
-    for(string varToCreate : (*(clause->unboundVars))) {
-        (*mapping)[varToCreate] = genNewVar(varToCreate);
-    }
     
 #ifdef NDEBUG
     debugMapping(mapping);
